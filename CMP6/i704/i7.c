@@ -16,6 +16,7 @@ char OVF=0;
 #define SGNV (1LL<<37)
 #define QV (1LL<<36)
 #define PV (1LL<<35)
+#define VV (0x7FFFFFFFF)
 
 #define SAS (AC|=(1LL<<37))
 #define SAQ (AC|=(1LL<<36))
@@ -96,6 +97,7 @@ void add()
     int y = (S(M[ad])==0) ? V(M[ad]) : -V(M[ad]);
     
     ac+=y;
+    AC&=~VV;
     if(ac<0) {
         SAS;
         AC|=V(-ac);
@@ -114,6 +116,7 @@ void adm()
     int y = V(M[ad]);
 
     ac+=y;
+    AC&=~VV;
     if(ac<0) {
         SAS;
         AC|=V(-ac);
