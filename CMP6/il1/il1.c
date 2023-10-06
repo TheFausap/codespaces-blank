@@ -140,6 +140,34 @@ void cmp(char *a)
     for(int i=39;i>=0;i--) CMPG[i]=ab(CMPG[i],ONE[i],&c);
 }
 
+void mv(char *, char *);
+
+char *iabs(char *a)
+{
+    char *t;
+    t=calloc(40,sizeof(char));
+    mv(t,a);
+    if(a[0]) { cmp(a); mv(t,CMPG); }
+    return t;
+}
+
+// v1>v2 return 1 otherwise 0
+int gt(char *v1, char *v2)
+{
+    for (int i=0;i<40;i++) {
+        if(v1[i]!=v2[i]) return (v1[i]==1) ? 1 : 0;
+    }
+    return 0;
+}
+
+int eq(char *v1, char *v2)
+{
+    for (int i=0;i<40;i++) {
+        if(v1[i]!=v2[i]) return 0;
+    }
+    return 1;
+}
+
 void mv(char *d, char *s)
 {
     for(int i=0;i<40;i++) d[i]=s[i];
@@ -287,9 +315,9 @@ void set(char* m, long v)
     }
 }
 
-void mul(int y)
+void mul(char *v)
 {
-    mv(R3,M[y]);
+    mv(R3,v);
     for(int i=39;i>0;i--) {
         if(Q[39]==1) { _add(); mv(A,ADDR); shr(); }
         else { shr(); }
@@ -557,9 +585,118 @@ void op5(char v, char *ad)
     }
 }
 
+void op6(char v, char *ad)
+{
+    int addr = fer(ad);
+    switch(v) {
+        case '6':
+            if(gt(iabs(A),iabs(M[addr]))) { idiv(addr); HLTF=1; }
+            else if((eq(iabs(A),iabs(M[addr])))&&(A[0]==0)) { idiv(addr); HLTF=1;}
+            else if((eq(iabs(A),iabs(M[addr])))&&(A[0]==1)) { idiv(addr); }
+            break;
+        case '7':
+            for(int i=0;i<40;i++) A[i]=0;
+            if(gt(iabs(A),iabs(M[addr]))) { idiv(addr); HLTF=1; }
+            else if((eq(iabs(A),iabs(M[addr])))&&(A[0]==0)) { idiv(addr); HLTF=1;}
+            else if((eq(iabs(A),iabs(M[addr])))&&(A[0]==1)) { idiv(addr); }
+            break;
+        case 'L':
+        case 'S':
+            for(int i=0;i<40;i++) A[i]=0;
+            A[1]=1;
+            if(gt(abs(A),iabs(M[addr]))) { idiv(addr); HLTF=1; }
+            else if((eq(iabs(A),iabs(M[addr])))&&(A[0]==0)) { idiv(addr); HLTF=1;}
+            else if((eq(iabs(A),iabs(M[addr])))&&(A[0]==1)) { idiv(addr); }
+            break;
+        case '8':
+        case 'K':
+        case 'N':
+        case 'F':
+            HLTF = 1;
+            break;
+        case '0':
+        case '1':
+        case '2':
+        case '3':
+        case '4':
+        case '5':
+        case '9':
+        case 'J':
+            for(int i=0;i<40;i++) A[i]=0;
+            idiv(addr);
+            break;
+        default:
+            break;
+    }
+}
+
 void op7(char v, char *ad)
 {
-
+    int addr=fer(ad);
+    char *t;
+    t=calloc(40,sizeof(char));
+    switch(v) {
+        case '0':
+            cmp(M[addr]);
+            mul(CMPG);
+            break;
+        case '1':
+            for(int i=0;i<40;i++) A[i]=0;
+            cmp(M[addr]);
+            mul(CMPG);
+            break;
+        case '2':
+            cmp(iabs(M[addr]));
+            mul(CMPG);
+            break;
+        case '3':
+            for(int i=0;i<40;i++) A[i]=0;
+            cmp(iabs(M[addr]));
+            mul(CMPG);
+            break;
+        case '4':
+            mul(M[addr]);
+            break;
+        case '5':
+            for(int i=0;i<40;i++) A[i]=0;
+            mul(M[addr]);
+            break;
+        case '6':
+            mul(iabs(M[addr]));
+            break;
+        case '7':
+            for(int i=0;i<40;i++) A[i]=0;
+            mul(iabs(M[addr]));
+            break;
+        case '8':
+        case 'K':
+        case 'N':
+        case 'F':
+            HLTF=1;
+            break;
+        case '9':
+            for(int i=0;i<40;i++) A[i]=0;
+            A[1]=1;
+            cmp(M[addr]);
+            mul(CMPG);
+            break;
+        case 'S':
+            for(int i=0;i<40;i++) A[i]=0;
+            A[1]=1;
+            cmp(iabs(M[addr]));
+            mul(CMPG);
+            break;
+        case 'J':
+            for(int i=0;i<40;i++) A[i]=0;
+            A[1]=1;
+            mul(M[addr]);
+            break;
+        case 'L':
+            for(int i=0;i<40;i++) A[i]=0;
+            A[1]=1;
+            mul(iabs(M[addr]));
+            break;
+    }
 }
 
 void exc(void)
@@ -589,6 +726,9 @@ void exc(void)
         case '5':
             op5(lux(op),ad);
             break;
+        case '6':
+            op6(lux(op),ad);
+            break;
         case '7':
             op7(lux(op),ad);
             break;
@@ -602,7 +742,7 @@ int main(int n, char **a)
     char c;
     i0();
 
-    set(A,42);
+    set(Q,42);
     set(M[100],4);
     idiv(100);
 #if 0
