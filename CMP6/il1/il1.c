@@ -7,6 +7,8 @@
 char A[40];
 char R3[40];
 char Q[40];
+char ADDR[40];
+char CMPG[40];
 char M[1000][40];
 char ONE[40];
 int PC = 3;
@@ -77,7 +79,7 @@ void i0()
     for(int i=0;i<1000;i++) {
         for(int j=0;j<40;j++) M[i][j]=0;
     }
-    for(int i=0;i<40;i++) { A[i] = 0; R3[i] = 0; Q[i] = 0; ONE[i] = 0; }
+    for(int i=0;i<40;i++) { A[i] = 0; R3[i] = 0; Q[i] = 0; ONE[i] = 0; ADDR[0]; }
     ONE[39] = 1;
 }
 
@@ -126,7 +128,7 @@ char ab(char a, char b, char *c)
 {
     char s = a+b+*c;
     if(s==3) {s=1; *c=1;}
-    if(s==2) {s=0; *c=1;}
+    else if(s==2) {s=0; *c=1;}
     else *c=0;
     return s;
 }
@@ -134,8 +136,8 @@ char ab(char a, char b, char *c)
 void cmp(char *a)
 {
     char c = 0;
-    for(int i=0;i<40;i++) a[i]^=1;
-    for(int i=39;i>=0;i--) a[i]=ab(a[i],ONE[i],&c);
+    for(int i=0;i<40;i++) CMPG[i]=a[i]^1;
+    for(int i=39;i>=0;i--) CMPG[i]=ab(CMPG[i],ONE[i],&c);
 }
 
 void mv(char *d, char *s)
@@ -151,7 +153,7 @@ void mvn(char *d, char *s, int ss, int se)
 void _add(void)
 {
     char c = 0;
-    for(int i=39;i>=0;i--) A[i]=ab(A[i],R3[i],&c);
+    for(int i=39;i>=0;i--) ADDR[i]=ab(A[i],R3[i],&c);
 }
 
 void cadd(int y)    // T - L
@@ -170,11 +172,11 @@ void absadd(int y)
     for(int i=39;i>=0;i--) A[i]=ab(A[i],R3[i],&c);
 }
 
-void _sub(void)
+char* _sub(void)
 {
     char c = 0;
     cmp(R3);
-    for(int i=39;i>=0;i--) A[i]=ab(A[i],R3[i],&c);
+    for(int i=39;i>=0;i--) ADDR[i]=ab(A[i],CMPG[i],&c);
 }
 
 void csub(int y)
@@ -183,7 +185,7 @@ void csub(int y)
     mv(R3,M[y]);
     cmp(R3);
     for(int i=0;i<40;i++) A[i] = 0;
-    for(int i=39;i>=0;i--) A[i]=ab(A[i],R3[i],&c);
+    for(int i=39;i>=0;i--) A[i]=ab(A[i],CMPG[i],&c);
 }
 
 void abssub(int y)
@@ -285,20 +287,28 @@ void set(char* m, long v)
     }
 }
 
-int mul(int y)
+void mul(int y)
 {
     mv(R3,M[y]);
     for(int i=39;i>0;i--) {
-        if(Q[39]==1) { 
-            _add(); 
-            shr(); 
-        }
-        else { 
-            shr();
+        if(Q[39]==1) { _add(); mv(A,ADDR); shr(); }
+        else { shr(); }
+    }
+    if(Q[0]==1) { _sub(); mv(A,ADDR); }
+}
+
+void idiv(int y)
+{
+    mv(R3,M[y]);
+    for(int i=39;i>0;i--) {
+        _sub();
+        if(ADDR[0]==1) { Q[39]=0; shl(); } 
+        else {
+            Q[39]=1;
+            mv(A,ADDR);
+            shl();
         }
     }
-    if(Q[0]==0) return 0;
-    _sub();
 }
 
 void op0(char v, char* ad)
@@ -592,9 +602,9 @@ int main(int n, char **a)
     char c;
     i0();
 
-    set(Q,42);
-    set(M[100],41);
-    mul(100);
+    set(A,42);
+    set(M[100],4);
+    idiv(100);
 #if 0
     printf("ILC\n");
     printf("? "); c = getc(stdin);
