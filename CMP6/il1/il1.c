@@ -9,12 +9,16 @@ char R3[40];
 char Q[40];
 char ADDR[40];
 char CMPG[40];
+char BF[6];
+char DBF[11];
 char M[1000][40];
 char ONE[40];
 int PC = 3;
 
 char HLTF = 0;
 char lfto = 1;
+
+FILE *fi, *fo, *dr;
 
 //               0  1  2   3   4   5   6  7   8  9        
 char sex[] = {   0, 0, 0,  0,  0,  0,  0, 0,  0, 0, // 0 
@@ -71,6 +75,13 @@ int fer(char *s) {
     int j=0, r=0;
     for(;*s++;j++) {
         r += (*s*(1<<(9-j)));
+    }
+}
+
+int drufer(char *s) {
+    int j=0, r=0;
+    for(;*s++;j++) {
+        r += (*s*(1<<(13-j)));
     }
 }
 
@@ -352,6 +363,12 @@ void op0(char v, char* ad)
             for(int i=0;i<40;i++) A[i] = 0;
             for(int i=0;i<n;i++) shl();
             break;
+        case '0':
+        case '2':
+        case '4':
+        case '6':
+             for(int i=0;i<n;i++) shl();
+            break;
         case '8':
         case 'K':
         case 'N':
@@ -385,6 +402,12 @@ void op1(char v, char* ad)
         case '7':
             for(int i=0;i<40;i++) A[i] = 0;
             for(int i=0;i<n;i++) shr();
+            break;
+        case '0':
+        case '2':
+        case '4':
+        case '6':
+             for(int i=0;i<n;i++) shr();
             break;
         case '8':
         case 'K':
@@ -699,14 +722,235 @@ void op7(char v, char *ad)
     }
 }
 
-void exc(void)
+char *readp(char *p)
+{
+    char r[5];
+    int j=0;
+    while(*p!='\n') {
+        if(*p=='O') r[j]='1';
+        else if(*p=='o') continue;
+        else r[j]='0';
+        j++;
+    }
+    return strdup(r);
+}
+
+void punchp(char *v)
+{
+    char t[7];
+    t[0]=' ';
+    t[1]=(v[0]==0)? ' ' : 'O';
+    t[2]='o';
+    t[3]=(v[1]==0)? ' ' : 'O';
+    t[4]=(v[2]==0)? ' ' : 'O';
+    t[5]=(v[3]==0)? ' ' : 'O';
+    t[6]=0;
+    fputs(t,fo);
+}
+
+void op8(char v, char *ad)
+{
+    char l[5];
+    char t[20];
+    char op[8];
+    char adr[10];
+    int nd = fer(ad);
+    int dad = 0;
+    switch(v) {
+        case '0':
+            for(int i=0;i<nd/4;i++) {
+                shl();shl();shl();shl();
+                fgets(BF,6,fi);
+                strcpy(l,readp(BF));
+                A[36]=l[1]; A[37]=l[2];
+                A[38]=l[3]; A[39]=l[4];
+            }
+            break;
+        case '1':
+        case '9':
+            for(int i=0;i<40;i++) A[i]=0;
+            for(int i=0;i<nd/4;i++) {
+                shl();shl();shl();shl();
+                fgets(BF,6,fi);
+                strcpy(l,readp(BF));
+                A[36]=l[1]; A[37]=l[2];
+                A[38]=l[3]; A[39]=l[4];
+            }
+            break;
+        case '2':
+            for(int i=0;i<nd/4;i++) {
+                punchp(A);
+                shl();shl();shl();shl();
+            }
+            break;
+        case '3':
+            for(int i=0;i<40;i++) A[i]=0;
+            for(int i=0;i<nd/4;i++) {
+                punchp(A);
+                shl();shl();shl();shl();
+            }
+            break;
+        case '5':
+            // DRUM SPECIAL ORDER (40 bit)
+            mvn(t,M[PC-1],20,39);
+            mvn(op,t,0,7);
+            mvn(adr,t,6,19);
+            dad = drufer(adr); dad%=16384;
+            switch(lux(op)) {
+                case '0':
+                case '1':
+                case '8':
+                case '9':
+                    shl();shl();shl();shl();
+                    shl();shl();shl();shl();
+                    shl();shl();shl();
+                    fseek(dr,dad,SEEK_SET);
+                    fread(DBF,sizeof(char),11,dr);
+                    A[29]=DBF[0];A[30]=DBF[1];A[31]=DBF[2];A[32]=DBF[3];
+                    A[33]=DBF[4];A[34]=DBF[5];A[35]=DBF[6];A[36]=DBF[7];
+                    A[37]=DBF[8];A[38]=DBF[9];A[39]=DBF[10];
+                    break;
+                default:
+                    shl();shl();shl();shl();
+                    shl();shl();shl();shl();
+                    shl();shl();shl();
+                    fseek(dr,dad,SEEK_SET);
+                    fread(DBF,sizeof(char),11,dr);
+                    A[29]=DBF[0];A[30]=DBF[1];A[31]=DBF[2];A[32]=DBF[3];
+                    A[33]=DBF[4];A[34]=DBF[5];A[35]=DBF[6];A[36]=DBF[7];
+                    A[37]=DBF[8];A[38]=DBF[9];A[39]=DBF[10];
+                    lfto=0; exc(M[PC-1]);
+                    break;
+            }
+            break;
+        case '6':
+            // DRUM SPECIAL ORDER (40 bit)
+            mvn(t,M[PC-1],20,39);
+            mvn(op,t,0,7);
+            mvn(adr,t,6,19);
+            dad = drufer(adr); dad%=16384;
+            switch(lux(op)) {
+                case '0':
+                case '1':
+                case '8':
+                case '9':
+                    DBF[0]=A[0];DBF[1]=A[1];DBF[2]=A[2];DBF[3]=A[3];
+                    DBF[4]=A[4];DBF[5]=A[5];DBF[6]=A[6];DBF[7]=A[7];
+                    DBF[8]=A[8];DBF[9]=A[9];DBF[10]=A[10];
+                    shl();shl();shl();shl();
+                    shl();shl();shl();shl();
+                    shl();shl();shl();
+                    fseek(dr,dad,SEEK_SET);
+                    fwrite(DBF,sizeof(char),11,dr);
+                    break;
+                default:
+                    DBF[0]=A[0];DBF[1]=A[1];DBF[2]=A[2];DBF[3]=A[3];
+                    DBF[4]=A[4];DBF[5]=A[5];DBF[6]=A[6];DBF[7]=A[7];
+                    DBF[8]=A[8];DBF[9]=A[9];DBF[10]=A[10];
+                    shl();shl();shl();shl();
+                    shl();shl();shl();shl();
+                    shl();shl();shl();
+                    fseek(dr,dad,SEEK_SET);
+                    fwrite(DBF,sizeof(char),11,dr);
+                    lfto=0; exc(M[PC-1]);
+                    break;
+            }
+            break;
+        case '7':
+            for(int i=0;i<40;i++) A[i]=0;
+            // DRUM SPECIAL ORDER (40 bit)
+            mvn(t,M[PC-1],20,39);
+            mvn(op,t,0,7);
+            mvn(adr,t,6,19);
+            dad = drufer(adr); dad%=16384;
+            switch(lux(op)) {
+                case '0':
+                case '1':
+                case '8':
+                case '9':
+                    DBF[0]=A[0];DBF[1]=A[1];DBF[2]=A[2];DBF[3]=A[3];
+                    DBF[4]=A[4];DBF[5]=A[5];DBF[6]=A[6];DBF[7]=A[7];
+                    DBF[8]=A[8];DBF[9]=A[9];DBF[10]=A[10];
+                    shl();shl();shl();shl();
+                    shl();shl();shl();shl();
+                    shl();shl();shl();
+                    fseek(dr,dad,SEEK_SET);
+                    fwrite(DBF,sizeof(char),11,dr);
+                    break;
+                default:
+                    DBF[0]=A[0];DBF[1]=A[1];DBF[2]=A[2];DBF[3]=A[3];
+                    DBF[4]=A[4];DBF[5]=A[5];DBF[6]=A[6];DBF[7]=A[7];
+                    DBF[8]=A[8];DBF[9]=A[9];DBF[10]=A[10];
+                    shl();shl();shl();shl();
+                    shl();shl();shl();shl();
+                    shl();shl();shl();
+                    fseek(dr,dad,SEEK_SET);
+                    fwrite(DBF,sizeof(char),11,dr);
+                    lfto=0; exc(M[PC-1]);
+                    break;
+            }
+            break;
+        case 'S':
+            for(int i=0;i<40;i++) A[i]=0; A[1]=1;
+            for(int i=0;i<nd/4;i++) {
+                punchp(A);
+                shl();shl();shl();shl();
+            }
+            break;
+        case 'L':
+            for(int i=0;i<40;i++) A[i]=0; A[1]=1;
+            // DRUM SPECIAL ORDER (40 bit)
+            mvn(t,M[PC-1],20,39);
+            mvn(op,t,0,7);
+            mvn(adr,t,6,19);
+            dad = drufer(adr); dad%=16384;
+            switch(lux(op)) {
+                case '0':
+                case '1':
+                case '8':
+                case '9':
+                    DBF[0]=A[0];DBF[1]=A[1];DBF[2]=A[2];DBF[3]=A[3];
+                    DBF[4]=A[4];DBF[5]=A[5];DBF[6]=A[6];DBF[7]=A[7];
+                    DBF[8]=A[8];DBF[9]=A[9];DBF[10]=A[10];
+                    shl();shl();shl();shl();
+                    shl();shl();shl();shl();
+                    shl();shl();shl();
+                    fseek(dr,dad,SEEK_SET);
+                    fwrite(DBF,sizeof(char),11,dr);
+                    break;
+                default:
+                    DBF[0]=A[0];DBF[1]=A[1];DBF[2]=A[2];DBF[3]=A[3];
+                    DBF[4]=A[4];DBF[5]=A[5];DBF[6]=A[6];DBF[7]=A[7];
+                    DBF[8]=A[8];DBF[9]=A[9];DBF[10]=A[10];
+                    shl();shl();shl();shl();
+                    shl();shl();shl();shl();
+                    shl();shl();shl();
+                    fseek(dr,dad,SEEK_SET);
+                    fwrite(DBF,sizeof(char),11,dr);
+                    lfto=0; exc(M[PC-1]);
+                    break;
+            }
+            break;
+        case '8':
+        case 'K':
+        case 'N':
+        case 'F':
+            HLTF = 1;
+            break;
+        default:
+            break;
+    }
+}
+
+void exc(char *w)
 {
     char t[20];
     char op[8];
     char ad[10];
-    if (lfto) { mvn(t,M[PC],0,19); lfto=0; } else { mvn(t,M[PC],20,39); lfto=1; }
+    if (lfto) { mvn(t,w,0,19); lfto=0; } else { mvn(t,w,20,39); lfto=1; }
     mvn(op,t,0,7);
     mvn(ad,t,10,19);
+    PC++;
     switch(lux(op)) {
         case '0':
             op0(lux(op),ad);
@@ -732,6 +976,9 @@ void exc(void)
         case '7':
             op7(lux(op),ad);
             break;
+        case '8':
+            op8(lux(op),ad);
+            break;
         default:
             break;
     }
@@ -742,6 +989,9 @@ int main(int n, char **a)
     char c;
     i0();
 
+    fi=fopen("in.pt","r+");
+    fo=fopen("out.pt","w+");
+    dr=fopen("drum.bin","wb+");
     set(Q,42);
     set(M[100],4);
     idiv(100);
@@ -750,11 +1000,12 @@ int main(int n, char **a)
     printf("? "); c = getc(stdin);
     while(c!='.') {
         while(HLTF != 1) {
-            exc();
+            exc(M[PC]);
         }
         printf("? "); c = getc(stdin);
     }
 #endif
 
+    fclose(fi); fclose(fo); fclose(dr);
     return 0;
 }
