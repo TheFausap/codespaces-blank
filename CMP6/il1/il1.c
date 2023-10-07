@@ -1,6 +1,7 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
+#include <math.h>
 
 // 1bit (sign) + 39bits
 
@@ -13,6 +14,7 @@ char BF[6];
 char DBF[11];
 char M[1000][40];
 char ONE[40];
+char HALF[40];
 int PC = 3;
 
 char HLTF = 0;
@@ -85,13 +87,22 @@ int drufer(char *s) {
     }
 }
 
+int b2d(char *v, int l)
+{
+    int r=0, j=0;
+    l--;
+    for(;*v++;j++) {
+        r += (*v*(1<<(l-j)));
+    }
+}
+
 void i0()
 {
     for(int i=0;i<1000;i++) {
         for(int j=0;j<40;j++) M[i][j]=0;
     }
-    for(int i=0;i<40;i++) { A[i] = 0; R3[i] = 0; Q[i] = 0; ONE[i] = 0; ADDR[0]; }
-    ONE[39] = 1;
+    for(int i=0;i<40;i++) { A[i] = 0; R3[i] = 0; Q[i] = 0; ONE[i] = 0; ADDR[i] = 0; HALF[i] = 0; }
+    ONE[39] = 1; HALF[1]=1;
 }
 
 int sex2d(char *s) {
@@ -149,6 +160,12 @@ void cmp(char *a)
     char c = 0;
     for(int i=0;i<40;i++) CMPG[i]=a[i]^1;
     for(int i=39;i>=0;i--) CMPG[i]=ab(CMPG[i],ONE[i],&c);
+}
+
+void cmp1(char *a)
+{
+    char c = 0;
+    for(int i=0;i<40;i++) CMPG[i]=a[i]^1;
 }
 
 void mv(char *, char *);
@@ -350,7 +367,7 @@ void idiv(int y)
     }
 }
 
-void op0(char v, char* ad)
+int op0(char v, char* ad)
 {
     int n = fer(ad);
     n%=64;
@@ -390,7 +407,7 @@ void op0(char v, char* ad)
     }
 }
 
-void op1(char v, char* ad)
+int op1(char v, char* ad)
 {
     int n = fer(ad);
     n%=64;
@@ -627,7 +644,7 @@ void op6(char v, char *ad)
         case 'S':
             for(int i=0;i<40;i++) A[i]=0;
             A[1]=1;
-            if(gt(abs(A),iabs(M[addr]))) { idiv(addr); HLTF=1; }
+            if(gt(iabs(A),iabs(M[addr]))) { idiv(addr); HLTF=1; }
             else if((eq(iabs(A),iabs(M[addr])))&&(A[0]==0)) { idiv(addr); HLTF=1;}
             else if((eq(iabs(A),iabs(M[addr])))&&(A[0]==1)) { idiv(addr); }
             break;
@@ -747,6 +764,21 @@ void punchp(char *v)
     t[6]=0;
     fputs(t,fo);
 }
+
+void punch5p(char *v)
+{
+    char t[7];
+    t[0]=(v[0]==0)? ' ' : 'O';
+    t[1]=(v[1]==0)? ' ' : 'O';
+    t[2]='o';
+    t[3]=(v[2]==0)? ' ' : 'O';
+    t[4]=(v[3]==0)? ' ' : 'O';
+    t[5]=(v[4]==0)? ' ' : 'O';
+    t[6]=0;
+    fputs(t,fo);
+}
+
+void exc(char *);
 
 void op8(char v, char *ad)
 {
@@ -942,6 +974,443 @@ void op8(char v, char *ad)
     }
 }
 
+void op9(char v, char *ad)
+{
+    int nd = fer(ad);
+    int b = 0;
+    char l[5];
+    char d5[5], nc[6];
+    switch(v) {
+        case '1':
+            for(int i=0;i<40;i++) A[i]=0;
+            shr();shr();shr();shr();
+            fgets(BF,6,fi);
+            strcpy(l,readp(BF));
+            A[36]=l[1]; A[37]=l[2];
+            A[38]=l[3]; A[39]=l[4];
+            A[0]=l[0];
+            break;
+        case '2':
+            d5[0]=ad[9];d5[1]=ad[0];d5[2]=ad[1];d5[3]=ad[2];d5[4]=ad[3];
+            nc[5]=ad[9];nc[4]=ad[8];nc[3]=ad[7];nc[2]=ad[6];nc[1]=ad[5];nc[0]=ad[4];
+            b = ceil(b2d(nc,6)/4.0);
+            for(int i=0;i<b;i++) {
+                punch5p(d5);
+            }
+            break;
+        default:
+            break;
+    }
+}
+
+void opK(char v, char *ad)
+{
+    int addr = fer(ad);
+    char c=0;
+    switch(v) {
+        case '0':
+            cmp1(Q);
+            for(int i=39;i>=0;i--) ADDR[i]=ab(A[i],CMPG[i],&c);
+            mv(A,ADDR);
+            break;
+        case '1':
+            cmp1(Q);
+            mv(A,CMPG);
+            break;
+        case '2':
+            if(Q[0]==0) {
+                cmp1(Q);
+                for(int i=39;i>=0;i--) ADDR[i]=ab(A[i],CMPG[i],&c);
+                mv(A,ADDR);
+            } else {
+                for(int i=39;i>=0;i--) ADDR[i]=ab(Q[i],ONE[i],&c);
+                c=0;
+                for(int i=39;i>=0;i--) ADDR[i]=ab(A[i],ADDR[i],&c);
+                mv(A,ADDR);
+            }
+            break;
+        case '3':
+            if(Q[0]==0) {
+                cmp1(Q);
+                mv(A,CMPG);
+            } else {
+                for(int i=39;i>=0;i--) ADDR[i]=ab(Q[i],ONE[i],&c);
+                mv(A,ADDR);
+            }
+            break;
+        case '4':
+            for(int i=39;i>=0;i--) ADDR[i]=ab(Q[i],ONE[i],&c);
+            c=0;
+            for(int i=39;i>=0;i--) ADDR[i]=ab(A[i],ADDR[i],&c);
+            mv(A,ADDR);
+            break;
+        case '5':
+            for(int i=39;i>=0;i--) ADDR[i]=ab(Q[i],ONE[i],&c);
+            mv(A,ADDR);
+            break;
+        case '6':
+            if(Q[0]==1) {
+                cmp1(Q);
+                for(int i=39;i>=0;i--) ADDR[i]=ab(A[i],CMPG[i],&c);
+                mv(A,ADDR);
+            } else {
+                for(int i=39;i>=0;i--) ADDR[i]=ab(Q[i],ONE[i],&c);
+                c=0;
+                for(int i=39;i>=0;i--) ADDR[i]=ab(A[i],ADDR[i],&c);
+                mv(A,ADDR);
+            }
+            break;
+        case '7':
+            if(Q[0]==1) {
+                cmp1(Q);
+                mv(A,CMPG);
+            } else {
+                for(int i=39;i>=0;i--) ADDR[i]=ab(Q[i],ONE[i],&c);
+                mv(A,ADDR);
+            }
+            break;
+        case '8':
+        case 'K':
+        case 'N':
+        case 'F':
+            HLTF = 1;
+            break;
+        case '9':
+            cmp1(Q);
+            for(int i=39;i>=0;i--) ADDR[i]=ab(CMPG[i],HALF[i],&c);
+            mv(A,ADDR);
+            break;
+        case 'S':
+            if(Q[0]==0) {
+                cmp1(Q);
+                for(int i=39;i>=0;i--) ADDR[i]=ab(CMPG[i],HALF[i],&c);
+                mv(A,ADDR);
+            } else {
+                for(int i=39;i>=0;i--) ADDR[i]=ab(Q[i],ONE[i],&c);
+                for(int i=39;i>=0;i--) ADDR[i]=ab(ADDR[i],HALF[i],&c);
+                mv(A,ADDR);
+            }
+            break;
+        case 'J':
+            for(int i=39;i>=0;i--) ADDR[i]=ab(Q[i],ONE[i],&c);
+            for(int i=39;i>=0;i--) ADDR[i]=ab(ADDR[i],HALF[i],&c);
+            mv(A,ADDR);
+            break;
+        case 'L':
+            if(Q[0]==1) {
+                cmp1(Q);
+                for(int i=39;i>=0;i--) ADDR[i]=ab(CMPG[i],HALF[i],&c);
+                mv(A,ADDR);
+            } else {
+                for(int i=39;i>=0;i--) ADDR[i]=ab(Q[i],ONE[i],&c);
+                for(int i=39;i>=0;i--) ADDR[i]=ab(ADDR[i],HALF[i],&c);
+                mv(A,ADDR);
+            }
+            break;
+        default:
+            break;
+    }
+}
+
+void opS(char v, char *ad)
+{
+    char c=0;
+    switch(v) {
+        case '0':
+            mv(R3,Q);
+            _sub();
+            mv(A,ADDR);
+            break;
+        case '1':
+            cmp(Q);
+            mv(A,CMPG);
+            break;
+        case '2':
+            mv(R3,iabs(Q));
+            _sub();
+            mv(A,ADDR);
+            break;
+        case '3':
+            mv(R3,iabs(Q));
+            cmp(R3);
+            mv(R3,CMPG);
+            _sub();
+            mv(A,ADDR);
+            break;
+        case '4':
+            mv(R3,Q);
+            _add();
+            mv(A,ADDR);
+            break;
+        case '5':
+            mv(A,Q);
+            break;
+        case '6':
+            mv(R3,iabs(Q));
+            _add();
+            mv(A,ADDR);
+            break;
+        case '7':
+            mv(A,iabs(Q));
+            break;
+        case '8':
+        case 'K':
+        case 'N':
+        case 'F':
+            HLTF = 1;
+            break;
+        case '9':
+            cmp(Q);
+            for(int i=39;i>=0;i--) ADDR[i]=ab(HALF[i],CMPG[i],&c);
+            mv(A,ADDR);
+            break;
+        case 'S':
+            cmp(iabs(Q));
+            for(int i=39;i>=0;i--) ADDR[i]=ab(HALF[i],CMPG[i],&c);
+            mv(A,ADDR);
+            break;
+        case 'J':
+            for(int i=39;i>=0;i--) ADDR[i]=ab(HALF[i],Q[i],&c);
+            mv(A,ADDR);
+            break;
+        case 'L':
+            for(int i=39;i>=0;i--) ADDR[i]=ab(HALF[i],iabs(Q)[i],&c);
+            mv(A,ADDR);
+            break;
+        default:
+            break;
+    }
+}
+
+void opJ(char v, char *ad)
+{
+    int addr = fer(ad);
+    switch(v) {
+        case '0':
+        case '2':
+        case '4':
+        case '6':
+            for(int i=0;i<40;i++) {
+                if((M[addr][i]==1)&&(Q[i]==1)) Q[i]=1;
+                else Q[i]=0;
+            }
+            break;
+        case '1':
+        case '3':
+        case '5':
+        case '7':
+            for(int i=0;i<40;i++) A[i]=0;
+            for(int i=0;i<40;i++) {
+                if((M[addr][i]==1)&&(Q[i]==1)) Q[i]=1;
+                else Q[i]=0;
+            }
+            break;
+        case '8':
+        case 'K':
+        case 'N':
+        case 'F':
+            HLTF = 1;
+            break;
+        case '9':
+        case 'S':
+        case 'J':
+        case 'L':
+            A[1]=1;
+            for(int i=0;i<40;i++) {
+                if((M[addr][i]==1)&&(Q[i]==1)) Q[i]=1;
+                else Q[i]=0;
+            }
+            break;
+        default:
+            break;
+    }
+}
+
+void opF(char v, char *ad)
+{
+    int addr = fer(ad);
+    char c=0;
+    char t[40];
+    mv(t,M[addr]);
+    switch(v) {
+        case '0':
+            cmp1(t);
+            for(int i=39;i>=0;i--) ADDR[i]=ab(A[i],CMPG[i],&c);
+            mv(A,ADDR);
+            break;
+        case '1':
+            cmp1(t);
+            mv(A,CMPG);
+            break;
+        case '2':
+            if(t[0]==0) {
+                cmp1(t);
+                for(int i=39;i>=0;i--) ADDR[i]=ab(A[i],CMPG[i],&c);
+                mv(A,ADDR);
+            } else {
+                for(int i=39;i>=0;i--) ADDR[i]=ab(t[i],ONE[i],&c);
+                c=0;
+                for(int i=39;i>=0;i--) ADDR[i]=ab(A[i],ADDR[i],&c);
+                mv(A,ADDR);
+            }
+            break;
+        case '3':
+            if(t[0]==0) {
+                cmp1(t);
+                mv(A,CMPG);
+            } else {
+                for(int i=39;i>=0;i--) ADDR[i]=ab(t[i],ONE[i],&c);
+                mv(A,ADDR);
+            }
+            break;
+        case '4':
+            for(int i=39;i>=0;i--) ADDR[i]=ab(t[i],ONE[i],&c);
+            c=0;
+            for(int i=39;i>=0;i--) ADDR[i]=ab(A[i],ADDR[i],&c);
+            mv(A,ADDR);
+            break;
+        case '5':
+            for(int i=39;i>=0;i--) ADDR[i]=ab(t[i],ONE[i],&c);
+            mv(A,ADDR);
+            break;
+        case '6':
+            if(t[0]==1) {
+                cmp1(Q);
+                for(int i=39;i>=0;i--) ADDR[i]=ab(A[i],CMPG[i],&c);
+                mv(A,ADDR);
+            } else {
+                for(int i=39;i>=0;i--) ADDR[i]=ab(t[i],ONE[i],&c);
+                c=0;
+                for(int i=39;i>=0;i--) ADDR[i]=ab(A[i],ADDR[i],&c);
+                mv(A,ADDR);
+            }
+            break;
+        case '7':
+            if(t[0]==1) {
+                cmp1(t);
+                mv(A,CMPG);
+            } else {
+                for(int i=39;i>=0;i--) ADDR[i]=ab(t[i],ONE[i],&c);
+                mv(A,ADDR);
+            }
+            break;
+        case '8':
+        case 'K':
+        case 'N':
+            HLTF = 1;
+            break;
+        case '9':
+            cmp1(t);
+            for(int i=39;i>=0;i--) ADDR[i]=ab(CMPG[i],HALF[i],&c);
+            mv(A,ADDR);
+            break;
+        case 'S':
+            if(t[0]==0) {
+                cmp1(t);
+                for(int i=39;i>=0;i--) ADDR[i]=ab(CMPG[i],HALF[i],&c);
+                mv(A,ADDR);
+            } else {
+                for(int i=39;i>=0;i--) ADDR[i]=ab(t[i],ONE[i],&c);
+                for(int i=39;i>=0;i--) ADDR[i]=ab(ADDR[i],HALF[i],&c);
+                mv(A,ADDR);
+            }
+            break;
+        case 'J':
+            for(int i=39;i>=0;i--) ADDR[i]=ab(t[i],ONE[i],&c);
+            for(int i=39;i>=0;i--) ADDR[i]=ab(ADDR[i],HALF[i],&c);
+            mv(A,ADDR);
+            break;
+        case 'L':
+            if(t[0]==1) {
+                cmp1(t);
+                for(int i=39;i>=0;i--) ADDR[i]=ab(CMPG[i],HALF[i],&c);
+                mv(A,ADDR);
+            } else {
+                for(int i=39;i>=0;i--) ADDR[i]=ab(t[i],ONE[i],&c);
+                for(int i=39;i>=0;i--) ADDR[i]=ab(ADDR[i],HALF[i],&c);
+                mv(A,ADDR);
+            }
+            break;
+        case 'F':
+            HLTF = 1;
+        default:
+            break;
+    }
+}
+
+void opL(char v, char *ad)
+{
+    int addr = fer(ad);
+    char t[40];
+    char c=0;
+    mv(t,M[addr]);
+    switch(v) {
+        case '0':
+            mv(R3,t);
+            _sub();
+            mv(A,ADDR);
+            break;
+        case '1':
+            cmp(t);
+            mv(A,CMPG);
+            break;
+        case '2':
+            mv(R3,iabs(t));
+            _sub();
+            mv(A,ADDR);
+            break;
+        case '3':
+            mv(R3,iabs(t));
+            cmp(R3);
+            mv(R3,CMPG);
+            _sub();
+            mv(A,ADDR);
+            break;
+        case '4':
+            mv(R3,t);
+            _add();
+            mv(A,ADDR);
+            break;
+        case '5':
+            mv(A,t);
+            break;
+        case '6':
+            mv(R3,iabs(t));
+            _add();
+            mv(A,ADDR);
+            break;
+        case '7':
+            mv(A,iabs(t));
+            break;
+        case '8':
+        case 'K':
+        case 'N':
+        case 'F':
+            HLTF = 1;
+            break;
+        case '9':
+            cmp(t);
+            for(int i=39;i>=0;i--) ADDR[i]=ab(HALF[i],CMPG[i],&c);
+            mv(A,ADDR);
+            break;
+        case 'S':
+            cmp(iabs(t));
+            for(int i=39;i>=0;i--) ADDR[i]=ab(HALF[i],CMPG[i],&c);
+            mv(A,ADDR);
+            break;
+        case 'J':
+            for(int i=39;i>=0;i--) ADDR[i]=ab(HALF[i],t[i],&c);
+            mv(A,ADDR);
+            break;
+        case 'L':
+            for(int i=39;i>=0;i--) ADDR[i]=ab(HALF[i],iabs(t)[i],&c);
+            mv(A,ADDR);
+            break;
+        default:
+            break;
+    }
+}
+
 void exc(char *w)
 {
     char t[20];
@@ -978,6 +1447,24 @@ void exc(char *w)
             break;
         case '8':
             op8(lux(op),ad);
+            break;
+        case '9':
+            op9(lux(op),ad);
+            break;
+        case 'K':
+            opK(lux(op),ad);
+            break;
+        case 'S':
+            opS(lux(op),ad);
+            break;
+        case 'J':
+            opJ(lux(op),ad);
+            break;
+        case 'F':
+            opF(lux(op),ad);
+            break;
+        case 'L':
+            opL(lux(op),ad);
             break;
         default:
             break;
