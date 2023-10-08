@@ -12,7 +12,7 @@ char ADDR[40];
 char CMPG[40];
 char BF[6];
 char DBF[11];
-char M[1000][40];
+char M[1024][40];
 char ONE[40];
 char HALF[40];
 int PC = 3;
@@ -96,6 +96,9 @@ int b2d(char *v, int l)
     }
 }
 
+void setsex(char*, char *, char *);
+
+#define sx(x,y,z) setsex(M[x],#y,#z)
 void i0()
 {
     for(int i=0;i<1000;i++) {
@@ -103,6 +106,9 @@ void i0()
     }
     for(int i=0;i<40;i++) { A[i] = 0; R3[i] = 0; Q[i] = 0; ONE[i] = 0; ADDR[i] = 0; HALF[i] = 0; }
     ONE[39] = 1; HALF[1]=1;
+    sx( 999,S5001,263L2);
+    sx(1000,L03L1,10003);
+    sx(1001,L4000,00002);
 }
 
 int sex2d(char *s) {
@@ -212,98 +218,11 @@ void _add(void)
     for(int i=39;i>=0;i--) ADDR[i]=ab(A[i],R3[i],&c);
 }
 
-void cadd(int y)    // T - L
-{
-    char c = 0;
-    mv(R3,M[y]);
-    for(int i=0;i<40;i++) A[i] = 0;
-    for(int i=39;i>=0;i--) A[i]=ab(A[i],R3[i],&c);
-}
-
-void absadd(int y)
-{
-    char c = 0;
-    mv(R3,M[y]);
-    if(R3[0]) cmp(R3);
-    for(int i=39;i>=0;i--) A[i]=ab(A[i],R3[i],&c);
-}
-
 char* _sub(void)
 {
     char c = 0;
     cmp(R3);
     for(int i=39;i>=0;i--) ADDR[i]=ab(A[i],CMPG[i],&c);
-}
-
-void csub(int y)
-{
-    char c = 0;
-    mv(R3,M[y]);
-    cmp(R3);
-    for(int i=0;i<40;i++) A[i] = 0;
-    for(int i=39;i>=0;i--) A[i]=ab(A[i],CMPG[i],&c);
-}
-
-void abssub(int y)
-{
-    char c = 0;
-    mv(R3,M[y]);
-    if(R3[0]) cmp(R3);
-    cmp(R3);
-    for(int i=39;i>=0;i--) A[i]=ab(A[i],R3[i],&c);
-}
-
-void cia(int y)     // T - F
-{
-    char c = 0;
-    mv(R3,M[y]);
-    for(int i=0;i<40;i++) A[i] = 0;
-    for(int i=39;i>=0;i--) R3[i]=ab(R3[i],ONE[i],&c);
-    c = 0;
-    for(int i=39;i>=0;i--) A[i]=ab(A[i],R3[i],&c);
-}
-
-void cis(int y)
-{
-    char c = 0;
-    mv(R3,M[y]);
-    for(int i=0;i<40;i++) R3[i]^=1;
-    for(int i=0;i<40;i++) A[i] = 0;
-    for(int i=39;i>=0;i--) A[i]=ab(A[i],R3[i],&c);
-}
-
-void addq(void)     // T - S
-{
-    char c = 0;
-    mv(R3,Q);
-    for(int i=39;i>=0;i--) A[i]=ab(A[i],R3[i],&c);
-}
-
-void ciaq(int y)    // T - K
-{
-    char c = 0;
-    mv(R3,Q);
-    for(int i=0;i<40;i++) A[i] = 0;
-    for(int i=39;i>=0;i--) R3[i]=ab(R3[i],ONE[i],&c);
-    c = 0;
-    for(int i=39;i>=0;i--) A[i]=ab(A[i],R3[i],&c);
-}
-
-void subq(int y)
-{
-    char c = 0;
-    mv(R3,Q);
-    cmp(R3);
-    for(int i=39;i>=0;i--) A[i]=ab(A[i],R3[i],&c);
-}
-
-void cisq(int y)
-{
-    char c = 0;
-    mv(R3,Q);
-    for(int i=0;i<40;i++) R3[i]^=1;
-    for(int i=0;i<40;i++) A[i] = 0;
-    for(int i=39;i>=0;i--) A[i]=ab(A[i],R3[i],&c);
 }
 
 void shl(void)      // T - 0
@@ -341,6 +260,26 @@ void set(char* m, long v)
         m[i]=vu%2;
         vu/=2;
     }
+}
+
+void setsex(char* m, char *sl, char *sr)
+{
+    char op[8], addr[12];
+    int t=0;
+
+    strcpy(op,cel[sl[0]]);strcat(op,cel[sl[1]]);
+    for(int i=0;i<8;i++) m[i]=op[i]-'0';
+
+    strcpy(addr,cel[sl[2]]);
+    strcat(addr,cel[sl[3]]);strcat(addr,cel[sl[4]]);
+    for(int i=10,j=2;i<20;i++,j++) m[i]=addr[j]-'0';
+
+    strcpy(op,cel[sr[0]]);strcat(op,cel[sr[1]]);
+    for(int i=20,j=0;i<28;i++,j++) m[i]=op[j]-'0';
+
+    strcpy(addr,cel[sr[2]]);
+    strcat(addr,cel[sr[3]]);strcat(addr,cel[sr[4]]);
+    for(int i=30,j=2;i<40;i++,j++) m[i]=addr[j]-'0';
 }
 
 void mul(char *v)
@@ -756,11 +695,11 @@ void punchp(char *v)
 {
     char t[7];
     t[0]=' ';
-    t[1]=(v[0]==0)? ' ' : 'O';
+    t[1]=(v[0]=='0')? ' ' : 'O';
     t[2]='o';
-    t[3]=(v[1]==0)? ' ' : 'O';
-    t[4]=(v[2]==0)? ' ' : 'O';
-    t[5]=(v[3]==0)? ' ' : 'O';
+    t[3]=(v[1]=='0')? ' ' : 'O';
+    t[4]=(v[2]=='0')? ' ' : 'O';
+    t[5]=(v[3]=='0')? ' ' : 'O';
     t[6]=0;
     fputs(t,fo);
 }
@@ -768,12 +707,12 @@ void punchp(char *v)
 void punch5p(char *v)
 {
     char t[7];
-    t[0]=(v[0]==0)? ' ' : 'O';
-    t[1]=(v[1]==0)? ' ' : 'O';
+    t[0]=(v[0]=='0')? ' ' : 'O';
+    t[1]=(v[1]=='0')? ' ' : 'O';
     t[2]='o';
-    t[3]=(v[2]==0)? ' ' : 'O';
-    t[4]=(v[3]==0)? ' ' : 'O';
-    t[5]=(v[4]==0)? ' ' : 'O';
+    t[3]=(v[2]=='0')? ' ' : 'O';
+    t[4]=(v[3]=='0')? ' ' : 'O';
+    t[5]=(v[4]=='0')? ' ' : 'O';
     t[6]=0;
     fputs(t,fo);
 }
