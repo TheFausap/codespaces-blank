@@ -2,6 +2,7 @@
 #include <stdlib.h>
 #include <string.h>
 #include <math.h>
+#include <ctype.h>
 
 // 1bit (sign) + 39bits
 
@@ -285,10 +286,20 @@ void set(char* m, long v)
     }
 }
 
-void setsex(char* m, char *sl, char *sr)
+void setsex(char* m, char *sls, char *srs)
 {
     char op[8], addr[12];
+    char *sl, *sr, *osl, *osr;
+    osl=calloc(strlen(sls),sizeof(sls));
+    osr=calloc(strlen(srs),sizeof(srs));
+    sl=osl;sr=osr;
     int t=0;
+    for(;*sls;sls++,osl++) { 
+        *osl=toupper(*sls); 
+    }
+    for(;*srs;srs++,osr++) { 
+        *osr=toupper(*srs);  
+    }
 
     strcpy(op,cel[sl[0]]);strcat(op,cel[sl[1]]);
     for(int i=0;i<8;i++) m[i]=op[i]-'0';
@@ -1433,23 +1444,27 @@ void exc(char *w)
     }
 }
 
-int bs(void)
+void bs(void)
 {
-    char bf[30], w[30];
+    char *bf, *obf, w[30];
     char lw[20], rw[20];
     char c;
     int nw=1, l=0;
-    for(int i=0;i<30;i++) { bf[i]=0; w[30]=0; }
+    bf=calloc(30,sizeof(char));
+    obf=bf;
+    for(int i=0;i<30;i++) { bf[i]=0; w[i]=0; }
+    printf("B ");
     while(fgets(bf,29,stdin)) {
-        if (c=='.') return 0;
+        if(strcmp(bf,"\n")==0) continue;
+        printf("B ");
+        if (bf[0]=='.') break;
+        obf=strchr(bf,'\n');*obf=0;
         if(nw==1) {
-            strcpy(w,bf);
+            strcpy(lw,bf);
             nw++;
         }
-        if(nw==2) {
-            strcat(w,bf); 
-            mvn(lw,w,0,19); 
-            mvn(rw,w,20,39); 
+        else {
+            strcpy(rw,bf); 
             setsex(M[l++],lw,rw); nw=1; 
         }
     }
@@ -1468,7 +1483,7 @@ int main(int n, char **a)
     printf("? "); c = getc(stdin);
     while(c!='.') {
         if(c=='b') {
-            bs();
+            fflush(stdin);bs();
         }
         while(HLTF != 1) {
             exc(M[PC]);

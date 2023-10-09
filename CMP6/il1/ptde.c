@@ -1,4 +1,4 @@
-// Paper Tape Sex Enconder
+// Paper Tape Dec Enconder
 #include <stdio.h>
 #include <string.h>
 #include <stdlib.h>
@@ -18,7 +18,44 @@ char *cel[] = {  0, 0, 0, 0, 0, 0, 0, 0,  0, 0,
                  "1110", 0, 0, 0, "1101", "1010", "1111", 0, "1100", 0, 
                  0, 0, 0, "1011" };
 
+//               0  1  2   3   4   5   6  7   8  9        
+char sex[] = {   0, 0, 0,  0,  0,  0,  0, 0,  0, 0, // 0 
+                 0, 0, 0,  0,  0,  0,  0, 0,  0, 0, // 1
+                 0, 0, 0,  0,  0,  0,  0, 0,  0, 0, // 2
+                 0, 0, 0,  0,  0,  0,  0, 0,  0, 0, // 3
+                 0, 0, 0,  0,  0,  0,  0, 0,  0, 1, // 4
+                 2, 3, 4,  5,  6,  7,  8, 9,  0, 0, // 5
+                 0, 0, 0,  0,  0,  0,  0, 0,  0, 0, // 6
+                14, 0, 0,  0, 13, 10, 15, 0, 12, 0, // 7
+                 0, 0, 0, 11 };                     // 8
+
+char chas[] = { '0', '1', '2', '3', '4', '5', '6', 
+                '7', '8', '9', 'K', 'S', 'N', 'J', 
+                'F', 'L' };
+
 FILE *fi, *fo;
+
+int sex2d(char *s) {
+    int r=sex[s[0]]*256;
+    r+=sex[s[1]]*16;
+    r+=sex[s[2]];
+    return r;
+}
+
+char *d2sex(int v)
+{
+    char *r, *or;
+    int vv = 0;
+    r = calloc(4,sizeof(char));
+    r[0]=48;r[1]=48;r[2]=48;
+    or = r; r+=2;
+    while(v!=0) {
+        vv = v%16;
+        *r--=chas[vv];
+        v/=16;
+    }
+    return strdup(or);
+}
 
 void punchp(char *v)
 {
@@ -37,15 +74,18 @@ void punchp(char *v)
 int main(int n, char **a)
 {
     char c;
-    int ccnt=1;
+    int ccnt=1,pos=0;
     fo=fopen("out1.pt","w+");
     tcgetattr( STDIN_FILENO, &oldt);
     newt=oldt;
     newt.c_lflag &= ~(ICANON);
     newt.c_oflag |= (OPOST|OLCUC|ONLRET);
     tcsetattr( STDIN_FILENO, TCSANOW, &newt);
-
-    printf("PTP\n");
+    if(n>0) {
+        pos=sex2d(a[1]);
+        printf("PTP/DE %s\n", a[1]);
+        printf("%s _ ",d2sex(pos));
+    } else printf("PTP/DE 0\n");
     while(c=fgetc(stdin)) {
         if(ccnt==2) printf("  ");
         if(c=='.') break;
@@ -53,7 +93,7 @@ int main(int n, char **a)
             if((ccnt==3)&&(isalpha(c))) punchp(cel['0']);
             punchp(cel[toupper(c)]);
         }
-        if((ccnt>2)&&(isalpha(c))) { puts(""); ccnt=0; }
+        if((ccnt>2)&&(isalpha(c))) { printf("\n%s _ ",d2sex(++pos)); ccnt=0; }
         ccnt++;
     }
 
