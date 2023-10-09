@@ -1453,10 +1453,10 @@ void bs(void)
     bf=calloc(30,sizeof(char));
     obf=bf;
     for(int i=0;i<30;i++) { bf[i]=0; w[i]=0; }
-    printf("B ");
+    printf("B/%04d ",l);
     while(fgets(bf,29,stdin)) {
         if(strcmp(bf,"\n")==0) continue;
-        printf("B ");
+        printf("B/%04d ",l);
         if (bf[0]=='.') break;
         obf=strchr(bf,'\n');*obf=0;
         if(nw==1) {
