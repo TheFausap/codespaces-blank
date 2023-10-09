@@ -15,7 +15,7 @@ char DBF[11];
 char M[1024][40];
 char ONE[40];
 char HALF[40];
-int PC = 3;
+int PC = 0;
 
 char HLTF = 0;
 char lfto = 1;
@@ -97,8 +97,8 @@ int b2d(char *v, int l)
 }
 
 void setsex(char*, char *, char *);
-
-#define sx(x,y,z) setsex(M[x],#y,#z)
+int sex2d(char *);
+#define SX(x,y,z) setsex(M[sex2d(#x)],#y,#z)
 void i0()
 {
     for(int i=0;i<1000;i++) {
@@ -106,9 +106,32 @@ void i0()
     }
     for(int i=0;i<40;i++) { A[i] = 0; R3[i] = 0; Q[i] = 0; ONE[i] = 0; ADDR[i] = 0; HALF[i] = 0; }
     ONE[39] = 1; HALF[1]=1;
-    sx( 999,S5001,263L2);
-    sx(1000,L03L1,10003);
-    sx(1001,L4000,00002);
+    // D.O.I. 999-1023
+    SX(3F7,S5001,263L2);
+    SX(3F8,L03L1,10003);
+    SX(3F9,L4000,00002);
+    SX(3FK,L4000,00001);
+    SX(3FS,40000,81004);
+    SX(3FN,L43L1,363F8);
+    SX(3FJ,L43F7,423FF);
+    SX(3FF,L5000,26000);
+    SX(3FL,00000,00002);
+    SX(3L0,465F6,604S8);
+    SX(3L1,7LLLL,LLLL6);
+    SX(3L2,403FL,223LN);
+    SX(3L3,81004,223L7);
+    SX(3L4,42001,22001);
+    SX(3L5,503L0,7J000);
+    SX(3L6,263L9,223LN);
+    SX(3L7,F53FJ,423L8);
+    SX(3L8,L5000,L4000);
+    SX(3L9,L4001,40002);
+    SX(3LK,40001,L13L4);
+    SX(3LS,L43FK,423L4);
+    SX(3LN,L43L9,423L9);
+    SX(3LJ,503FL,L5001);
+    SX(3LF,80008,0000N);
+    SX(3LL,40001,273FS);
 }
 
 int sex2d(char *s) {
@@ -762,7 +785,7 @@ void op8(char v, char *ad)
             }
             break;
         case '5':
-            // DRUM SPECIAL ORDER (40 bit)
+            // DRUM SPECIAL VARIANT (40 bit)
             mvn(t,M[PC-1],20,39);
             mvn(op,t,0,7);
             mvn(adr,t,6,19);
@@ -795,7 +818,7 @@ void op8(char v, char *ad)
             }
             break;
         case '6':
-            // DRUM SPECIAL ORDER (40 bit)
+            // DRUM SPECIAL VARIANT (40 bit)
             mvn(t,M[PC-1],20,39);
             mvn(op,t,0,7);
             mvn(adr,t,6,19);
@@ -829,7 +852,7 @@ void op8(char v, char *ad)
             break;
         case '7':
             for(int i=0;i<40;i++) A[i]=0;
-            // DRUM SPECIAL ORDER (40 bit)
+            // DRUM SPECIAL VARIANT (40 bit)
             mvn(t,M[PC-1],20,39);
             mvn(op,t,0,7);
             mvn(adr,t,6,19);
@@ -870,7 +893,7 @@ void op8(char v, char *ad)
             break;
         case 'L':
             for(int i=0;i<40;i++) A[i]=0; A[1]=1;
-            // DRUM SPECIAL ORDER (40 bit)
+            // DRUM SPECIAL VARIANT (40 bit)
             mvn(t,M[PC-1],20,39);
             mvn(op,t,0,7);
             mvn(adr,t,6,19);
@@ -1410,6 +1433,28 @@ void exc(char *w)
     }
 }
 
+int bs(void)
+{
+    char bf[30], w[30];
+    char lw[20], rw[20];
+    char c;
+    int nw=1, l=0;
+    for(int i=0;i<30;i++) { bf[i]=0; w[30]=0; }
+    while(fgets(bf,29,stdin)) {
+        if (c=='.') return 0;
+        if(nw==1) {
+            strcpy(w,bf);
+            nw++;
+        }
+        if(nw==2) {
+            strcat(w,bf); 
+            mvn(lw,w,0,19); 
+            mvn(rw,w,20,39); 
+            setsex(M[l++],lw,rw); nw=1; 
+        }
+    }
+}
+
 int main(int n, char **a)
 {
     char c;
@@ -1418,19 +1463,18 @@ int main(int n, char **a)
     fi=fopen("in.pt","r+");
     fo=fopen("out.pt","w+");
     dr=fopen("drum.bin","wb+");
-    set(Q,42);
-    set(M[100],4);
-    idiv(100);
-#if 0
+
     printf("ILC\n");
     printf("? "); c = getc(stdin);
     while(c!='.') {
+        if(c=='b') {
+            bs();
+        }
         while(HLTF != 1) {
             exc(M[PC]);
         }
         printf("? "); c = getc(stdin);
     }
-#endif
 
     fclose(fi); fclose(fo); fclose(dr);
     return 0;
