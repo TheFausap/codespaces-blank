@@ -10,25 +10,6 @@ typedef signed char word;
 
 word ADDR[WSIZE];
 
-
-word *d2nb(unsigned long value) // input in standard binary
-{
-	unsigned long Schroeppel2 = 0xAAAAAAAAAAAA; // = 2/3*((2*2)^16-1) = ...1010
-	unsigned long r=(value + Schroeppel2);
-    word *rv;
-    int i = WSIZE-1;
-    
-    rv=calloc(WSIZE,sizeof(word));
-    r ^= Schroeppel2; // eXclusive OR
-	// resulting unsigned int to be interpreted as string of elements ε {0,1} (bits)
-    while(r!=0) {
-        rv[i--]=r%2;
-        r/=2;
-    }
-    return rv;
-}
-
-
 word *dc2nb(long value)
 {
     word *rv;
@@ -105,6 +86,20 @@ word *nbadd(word *a1, word *a2, word *c)
     return r;
 }
 
+word *nbsub(word *a1, word *a2, word *c)
+{
+    word *r,*ta2;
+    r=calloc(WSIZE,sizeof(word));
+    ta2=calloc(WSIZE,sizeof(word));
+
+    ta2=nbc(a2);
+
+    for(int i=WSIZE-1;i>=0;i--)
+        r[i]=anb(a1[i],ta2[i],c);
+
+    return r;
+}
+
 char *tostr(word *s)
 {
     char *r;
@@ -136,8 +131,8 @@ int main(int n, char **a)
     v1=calloc(WSIZE,sizeof(word));
     v2=calloc(WSIZE,sizeof(word));
     v3=calloc(WSIZE,sizeof(word));
-    mv(v1,d2nb(254));
-    mv(v2,d2nb(129));
+    mv(v1,dc2nb(254));
+    mv(v2,dc2nb(129));
     mv(v3,nbadd(v1,v2,&c));
     printf("%s\n",tostr(v3));
     printf("%s\n",tostr(dc2nb(-267)));
