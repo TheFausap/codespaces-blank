@@ -11,7 +11,7 @@ char R3[40];
 char Q[40];
 char ADDR[40];
 char CMPG[40];
-char BF[6];
+char BF[9];
 char DBF[11];
 char M[1024][40];
 char ONE[40];
@@ -55,7 +55,12 @@ char *restr[] = {  0, 0, 0, 0, 0, 0, 0, 0,  0, 0,
                  0, 0, 0, 0, 0, 0, 0, 0, "00", "01",
                  "10", "11" };
 
-char lux(char *s) {
+void mvn(char *, char *, int, int);
+char luxT(char *st) {
+    char *s;
+    s=calloc(5,sizeof(char));
+    mvn(s,st,0,3);
+    s[0]+=48;s[1]+=48;s[2]+=48;s[3]+=48;
     if (strcmp(s,"0000")==0) return '0';
     else if (strcmp(s,"0001")==0) return '1';
     else if (strcmp(s,"0010")==0) return '2';
@@ -74,18 +79,45 @@ char lux(char *s) {
     else if (strcmp(s,"1111")==0) return 'L';
 }
 
+char luxV(char *st) {
+    char *s;
+    s=calloc(5,sizeof(char));
+    mvn(s,st,4,7);
+    s[0]+=48;s[1]+=48;s[2]+=48;s[3]+=48;
+    if (strcmp(s,"0000")==0) return '0';
+    else if (strcmp(s,"0001")==0) return '1';
+    else if (strcmp(s,"0010")==0) return '2';
+    else if (strcmp(s,"0011")==0) return '3';
+    else if (strcmp(s,"0100")==0) return '4';
+    else if (strcmp(s,"0101")==0) return '5';
+    else if (strcmp(s,"0110")==0) return '6';
+    else if (strcmp(s,"0111")==0) return '7';
+    else if (strcmp(s,"1000")==0) return '8';
+    else if (strcmp(s,"1001")==0) return '9';
+    else if (strcmp(s,"1010")==0) return 'K';
+    else if (strcmp(s,"1011")==0) return 'S';
+    else if (strcmp(s,"1100")==0) return 'N';
+    else if (strcmp(s,"1101")==0) return 'J';
+    else if (strcmp(s,"1110")==0) return 'F';
+    else if (strcmp(s,"1111")==0) return 'L';
+}
+
+void pw(char *v)
+{
+    for(int i=0;i<40;i++) printf("%d",v[i]);
+    printf("\n");
+}
+
 int fer(char *s) {
     int j=0, r=0;
-    for(;*s++;j++) {
-        r += (*s*(1<<(9-j)));
-    }
+    for(j=0;j<10;j++,s++) {r += (*s*(1<<(9-j)));}
+    return r;
 }
 
 int drufer(char *s) {
     int j=0, r=0;
-    for(;*s++;j++) {
-        r += (*s*(1<<(13-j)));
-    }
+    for(j=0;j<10;j++,s++) {r += (*s*(1<<(13-j)));}
+    return r;
 }
 
 int b2d(char *v, int l)
@@ -95,6 +127,7 @@ int b2d(char *v, int l)
     for(;*v++;j++) {
         r += (*v*(1<<(l-j)));
     }
+    return r;
 }
 
 void setsex(char*, char *, char *);
@@ -107,6 +140,7 @@ void i0()
     }
     for(int i=0;i<40;i++) { A[i] = 0; R3[i] = 0; Q[i] = 0; ONE[i] = 0; ADDR[i] = 0; HALF[i] = 0; }
     ONE[39] = 1; HALF[1]=1;
+    #if 0
     // D.O.I. 999-1023
     SX(3F7,S5001,263L2);
     SX(3F8,L03L1,10003);
@@ -133,6 +167,7 @@ void i0()
     SX(3LJ,503FL,L5001);
     SX(3LF,80008,0000N);
     SX(3LL,40001,273FS);
+    #endif
 }
 
 int sex2d(char *s) {
@@ -714,26 +749,28 @@ void op7(char v, char *ad)
 
 char *readp(char *p)
 {
-    char r[5];
+    char *r;
+    char c;
     int j=0;
-    while(*p!='\n') {
-        if(*p=='O') r[j]='1';
-        else if(*p=='o') continue;
-        else r[j]='0';
+    r=calloc(5,sizeof(char));
+    while((c=*p++)!='\n') {
+        if(c=='O') r[j]=1;
+        else if(c=='o') continue;
+        else r[j]=0;
         j++;
     }
-    return strdup(r);
+    return r;
 }
 
 void punchp(char *v)
 {
     char t[7];
     t[0]=' ';
-    t[1]=(v[0]=='0')? ' ' : 'O';
+    t[1]=(v[0]==0)? ' ' : 'O';
     t[2]='o';
-    t[3]=(v[1]=='0')? ' ' : 'O';
-    t[4]=(v[2]=='0')? ' ' : 'O';
-    t[5]=(v[3]=='0')? ' ' : 'O';
+    t[3]=(v[1]==0)? ' ' : 'O';
+    t[4]=(v[2]==0)? ' ' : 'O';
+    t[5]=(v[3]==0)? ' ' : 'O';
     t[6]=0;
     fputs(t,fo);
 }
@@ -741,32 +778,32 @@ void punchp(char *v)
 void punch5p(char *v)
 {
     char t[7];
-    t[0]=(v[0]=='0')? ' ' : 'O';
-    t[1]=(v[1]=='0')? ' ' : 'O';
+    t[0]=(v[0]==0)? ' ' : 'O';
+    t[1]=(v[1]==0)? ' ' : 'O';
     t[2]='o';
-    t[3]=(v[2]=='0')? ' ' : 'O';
-    t[4]=(v[3]=='0')? ' ' : 'O';
-    t[5]=(v[4]=='0')? ' ' : 'O';
+    t[3]=(v[2]==0)? ' ' : 'O';
+    t[4]=(v[3]==0)? ' ' : 'O';
+    t[5]=(v[4]==0)? ' ' : 'O';
     t[6]=0;
     fputs(t,fo);
 }
 
 void exc(char *);
 
-void op8(char v, char *ad)
+void op8(char v, char **ad)
 {
     char l[5];
     char t[20];
     char op[8];
     char adr[10];
-    int nd = fer(ad);
+    int nd = fer(*ad);
     int dad = 0;
     switch(v) {
         case '0':
             for(int i=0;i<nd/4;i++) {
                 shl();shl();shl();shl();
-                fgets(BF,6,fi);
-                strcpy(l,readp(BF));
+                fgets(BF,8,fi);
+                mvn(l,readp(BF),0,4);
                 A[36]=l[1]; A[37]=l[2];
                 A[38]=l[3]; A[39]=l[4];
             }
@@ -777,7 +814,7 @@ void op8(char v, char *ad)
             for(int i=0;i<nd/4;i++) {
                 shl();shl();shl();shl();
                 fgets(BF,6,fi);
-                strcpy(l,readp(BF));
+                mvn(l,readp(BF),0,4);
                 A[36]=l[1]; A[37]=l[2];
                 A[38]=l[3]; A[39]=l[4];
             }
@@ -801,7 +838,7 @@ void op8(char v, char *ad)
             mvn(op,t,0,7);
             mvn(adr,t,6,19);
             dad = drufer(adr); dad%=16384;
-            switch(lux(op)) {
+            switch(luxV(op)) {
                 case '0':
                 case '1':
                 case '8':
@@ -834,7 +871,7 @@ void op8(char v, char *ad)
             mvn(op,t,0,7);
             mvn(adr,t,6,19);
             dad = drufer(adr); dad%=16384;
-            switch(lux(op)) {
+            switch(luxV(op)) {
                 case '0':
                 case '1':
                 case '8':
@@ -868,7 +905,7 @@ void op8(char v, char *ad)
             mvn(op,t,0,7);
             mvn(adr,t,6,19);
             dad = drufer(adr); dad%=16384;
-            switch(lux(op)) {
+            switch(luxV(op)) {
                 case '0':
                 case '1':
                 case '8':
@@ -909,7 +946,7 @@ void op8(char v, char *ad)
             mvn(op,t,0,7);
             mvn(adr,t,6,19);
             dad = drufer(adr); dad%=16384;
-            switch(lux(op)) {
+            switch(luxV(op)) {
                 case '0':
                 case '1':
                 case '8':
@@ -1387,57 +1424,59 @@ void opL(char v, char *ad)
 void exc(char *w)
 {
     char t[20];
-    char op[8];
-    char ad[10];
+    char *op;
+    char *ad;
+    op=calloc(8,sizeof(char));
+    ad=calloc(10,sizeof(char));
     if (lfto) { mvn(t,w,0,19); lfto=0; } else { mvn(t,w,20,39); lfto=1; }
     mvn(op,t,0,7);
     mvn(ad,t,10,19);
-    PC++;
-    switch(lux(op)) {
+    if (lfto) PC++;
+    switch(luxT(op)) {
         case '0':
-            op0(lux(op),ad);
+            op0(luxV(op),ad);
             break;
         case '1':
-            op1(lux(op),ad);
+            op1(luxV(op),ad);
             break;
         case '2':
-            op2(lux(op),ad);
+            op2(luxV(op),ad);
             break;
         case '3':
-            op3(lux(op),ad);
+            op3(luxV(op),ad);
             break;
         case '4':
-            op4(lux(op),ad);
+            op4(luxV(op),ad);
             break;
         case '5':
-            op5(lux(op),ad);
+            op5(luxV(op),ad);
             break;
         case '6':
-            op6(lux(op),ad);
+            op6(luxV(op),ad);
             break;
         case '7':
-            op7(lux(op),ad);
+            op7(luxV(op),ad);
             break;
         case '8':
-            op8(lux(op),ad);
+            op8(luxV(op),&ad);
             break;
         case '9':
-            op9(lux(op),ad);
+            op9(luxV(op),ad);
             break;
         case 'K':
-            opK(lux(op),ad);
+            opK(luxV(op),ad);
             break;
         case 'S':
-            opS(lux(op),ad);
+            opS(luxV(op),ad);
             break;
         case 'J':
-            opJ(lux(op),ad);
+            opJ(luxV(op),ad);
             break;
         case 'F':
-            opF(lux(op),ad);
+            opF(luxV(op),ad);
             break;
         case 'L':
-            opL(lux(op),ad);
+            opL(luxV(op),ad);
             break;
         default:
             break;
@@ -1456,7 +1495,6 @@ void bs(void)
     printf("B/%04d ",l);
     while(fgets(bf,29,stdin)) {
         if(strcmp(bf,"\n")==0) continue;
-        printf("B/%04d ",l);
         if (bf[0]=='.') break;
         obf=strchr(bf,'\n');*obf=0;
         if(nw==1) {
@@ -1465,8 +1503,12 @@ void bs(void)
         }
         else {
             strcpy(rw,bf); 
-            setsex(M[l++],lw,rw); nw=1; 
+            setsex(M[l++],lw,rw); 
+            nw=1; 
+            pw(M[l-1]);
         }
+        
+        printf("B/%04d ",l);
     }
 }
 
@@ -1475,7 +1517,8 @@ int main(int n, char **a)
     char c;
     i0();
 
-    fi=fopen("in.pt","r+");
+    //fi=fopen(a[1],"r+");
+    fi=fopen("doi.pt","r+");
     fo=fopen("out.pt","w+");
     dr=fopen("drum.bin","wb+");
 
