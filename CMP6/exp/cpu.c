@@ -50,6 +50,12 @@ void mvnd(word *d, word *s, int ss, int se, int ds)
     for(int i=ss,j=ds;i<=se;i++,j++) d[j]=s[i];
 }
 
+void pw(word *v)
+{
+    for(int i=0;i<WSIZE;i++) printf("%d",v[i]);
+    printf("\n");
+}
+
 long ipw2(int n)
 {  
     long r=1;
@@ -142,9 +148,9 @@ void rolr(word *v, word *w)
 
 void shll(word *v, word *w)
 {
-    for(int i=WSIZE-1,j=WSIZE-2;i>0;i--,j--) v[j]=v[i];
+    for(int i=1,j=0;i<WSIZE;i++,j++) v[j]=v[i];
     v[WSIZE-1]=w[0];
-    for(int i=WSIZE-1,j=WSIZE-2;i>0;i--,j--) w[j]=w[i];
+    for(int i=1,j=0;i<WSIZE;i++,j++) w[j]=w[i];
 }
 
 void shlr(word *v, word *w)
@@ -152,7 +158,27 @@ void shlr(word *v, word *w)
     for(int i=WSIZE-2,j=WSIZE-1;i>=2;i--,j--) v[j]=v[i];
     v[0]=0;
     for(int i=WSIZE-2,j=WSIZE-1;i>=2;i--,j--) w[j]=w[i];
-    w[0]=t;
+}
+
+void nbmul(word *v, word* w)
+{
+    word c=0;
+    mv(Q,v);
+    for(int i=WSIZE-1;i>=0;i--) {
+        c=0;
+        if (w[i]==1) { 
+            mv(Q,nbadd(Q,v,&c)); 
+            pw(Q);
+            shll(A,Q);
+            pw(Q);
+            printf("r%d\n",i);
+        }
+        else {
+            shll(A,Q);
+            pw(Q);
+            printf("r%d\n",i);
+        }
+    }
 }
 
 char *tostr(word *s)
@@ -173,12 +199,14 @@ int main(int n, char **a)
     v3=calloc(WSIZE,sizeof(word));
     mv(v1,dc2nb(254));
     mv(v2,dc2nb(129));
-    mv(v3,nbadd(v1,v2,&c));
-    printf("%s\n",tostr(v3));
-    printf("%s\n",tostr(dc2nb(-267)));
-    printf("%ld\n",nb2dc(dc2nb(-267)));
-    mv(v3,nbsub(v1,v2,&c));
-    printf("%s\n",tostr(v3));
-    printf("%ld\n",nb2dc(v3));
+    pw(v1); printf("multiplicand\n");
+    pw(v2); printf("multiplier\n");
+    printf("-----\n");
+    
+    nbmul(v1,v2);
+    printf("-------\n");
+    pw(A);
+    pw(Q);
+    printf("%ld ---- %ld\n",nb2dc(A),nb2dc(Q));
     return 0;
 }
