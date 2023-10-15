@@ -1521,10 +1521,12 @@ int bs(void)
 int main(int n, char **a)
 {
     char c;
+    char *bf;
     i0();
 
-    //fi=fopen(a[1],"r+");
-    fi=fopen("doi.pt","r+");
+    bf=calloc(11,sizeof(char));
+    fi=fopen(a[1],"r+");
+    //fi=fopen("doi.pt","r+");
     fo=fopen("out.pt","w+");
     dr=fopen("drum.bin","wb+");
 
@@ -1532,8 +1534,15 @@ int main(int n, char **a)
     printf("? "); c = getc(stdin);
     while(c!='.') {
         if(c=='b') {
-            fflush(stdin);bPC=bs();
+            fflush(stdin); bPC=bs();
         }
+	else if(c=='m') {
+	    fclose(fi);
+	    printf("m> "); fgets(bf,10,stdin);
+	    for(;*bf!='\n';bf++) {}
+	    *bf=0;
+	    fi=fopen(bf,"r+");
+	}
         while(HLTF == 0) {
             if(HLTF)printf("H%d",HLTF);
             exc(M[PC]);

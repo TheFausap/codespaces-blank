@@ -75,7 +75,7 @@ int main(int n, char **a)
 {
     char c;
     int ccnt=1, pos=0;
-    fo=fopen("out1.pt","w+");
+    fo=fopen("outse.pt","w+");
     tcgetattr( STDIN_FILENO, &oldt);
     newt=oldt;
     newt.c_lflag &= ~(ICANON);
