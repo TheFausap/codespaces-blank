@@ -57,6 +57,7 @@ char *restr[] = {  0, 0, 0, 0, 0, 0, 0, 0,  0, 0,
                  "10", "11" };
 
 void mvn(char *, char *, int, int);
+
 char luxT(char *st) {
     char *s;
     s=calloc(5,sizeof(char));
@@ -78,6 +79,7 @@ char luxT(char *st) {
     else if (strcmp(s,"1101")==0) return 'J';
     else if (strcmp(s,"1110")==0) return 'F';
     else if (strcmp(s,"1111")==0) return 'L';
+    return '0';
 }
 
 char luxV(char *st) {
@@ -101,6 +103,7 @@ char luxV(char *st) {
     else if (strcmp(s,"1101")==0) return 'J';
     else if (strcmp(s,"1110")==0) return 'F';
     else if (strcmp(s,"1111")==0) return 'L';
+    return '0';
 }
 
 void pw(char *v)
@@ -230,7 +233,6 @@ void cmp(char *a)
 
 void cmp1(char *a)
 {
-    char c = 0;
     for(int i=0;i<40;i++) CMPG[i]=a[i]^1;
 }
 
@@ -278,7 +280,7 @@ void _add(void)
     for(int i=39;i>=0;i--) ADDR[i]=ab(A[i],R3[i],&c);
 }
 
-char* _sub(void)
+void _sub(void)
 {
     char c = 0;
     cmp(R3);
@@ -329,7 +331,7 @@ void setsex(char* m, char *sls, char *srs)
     osl=calloc(strlen(sls),sizeof(sls));
     osr=calloc(strlen(srs),sizeof(srs));
     sl=osl;sr=osr;
-    int t=0;
+
     for(;*sls;sls++,osl++) { 
         *osl=toupper(*sls); 
     }
@@ -414,6 +416,7 @@ int op0(char v, char* ad)
         default:
             break;
     }
+    return 0;
 }
 
 int op1(char v, char* ad)
@@ -454,6 +457,7 @@ int op1(char v, char* ad)
         default:
             break;
     }
+    return 0;
 }
 
 void op2(char v, char *ad)
@@ -474,8 +478,10 @@ void op2(char v, char *ad)
             lfto = 1;
             break;
         case '6':
-            PC = fer(ad);
-            lfto = 1;
+            if(lfto) { 
+                PC = fer(ad);
+                lfto = 1;
+            }
             break;
         case '1':
             for(int i=0;i<40;i++) A[i] = 0;
@@ -682,8 +688,7 @@ void op6(char v, char *ad)
 void op7(char v, char *ad)
 {
     int addr=fer(ad);
-    char *t;
-    t=calloc(40,sizeof(char));
+
     switch(v) {
         case '0':
             cmp(M[addr]);
@@ -934,14 +939,16 @@ void op8(char v, char **ad)
             }
             break;
         case 'S':
-            for(int i=0;i<40;i++) A[i]=0; A[1]=1;
+            for(int i=0;i<40;i++) A[i]=0; 
+            A[1]=1;
             for(int i=0;i<nd/4;i++) {
                 punchp(A);
                 shl();shl();shl();shl();
             }
             break;
         case 'L':
-            for(int i=0;i<40;i++) A[i]=0; A[1]=1;
+            for(int i=0;i<40;i++) A[i]=0; 
+            A[1]=1;
             // DRUM SPECIAL VARIANT (40 bit)
             mvn(t,M[PC-1],20,39);
             mvn(op,t,0,7);
@@ -987,7 +994,6 @@ void op8(char v, char **ad)
 
 void op9(char v, char *ad)
 {
-    int nd = fer(ad);
     int b = 0;
     char l[5];
     char d5[5], nc[6];
@@ -1004,7 +1010,7 @@ void op9(char v, char *ad)
         case '2':
             d5[0]=ad[9];d5[1]=ad[0];d5[2]=ad[1];d5[3]=ad[2];d5[4]=ad[3];
             nc[5]=ad[9];nc[4]=ad[8];nc[3]=ad[7];nc[2]=ad[6];nc[1]=ad[5];nc[0]=ad[4];
-            b = ceil(b2d(nc,6)/4.0);
+            b = (int)ceil(b2d(nc,6)/4.0);
             for(int i=0;i<b;i++) {
                 punch5p(d5);
             }
@@ -1482,17 +1488,24 @@ void exc(char *w)
         default:
             break;
     }
+    #if 0
+    if(lfto) {
+        printf("PC %d: ",PC);
+        for(int i=0;i<40;i++) printf("%d",M[PC][i]);
+        printf("\nPress ENTER to continue\n");
+        fgets(t,3,stdin);
+    }
+    #endif
 }
 
-int bs(void)
+void bs(void)
 {
-    char *bf, *obf, w[30];
+    char *bf, *obf;
     char lw[20], rw[20];
-    char c;
     int nw=1, l=0, ol=0;
     bf=calloc(30,sizeof(char));
     obf=bf;
-    for(int i=0;i<30;i++) { bf[i]=0; w[i]=0; }
+    for(int i=0;i<30;i++) { bf[i]=0; }
     fgets(bf,29,stdin);
     printf("B/");fgets(bf,29,stdin);
     ol=strtol(bf,NULL,10); l=ol;
@@ -1525,30 +1538,43 @@ int main(int n, char **a)
     i0();
 
     bf=calloc(11,sizeof(char));
-    fi=fopen(a[1],"r+");
-    //fi=fopen("doi.pt","r+");
+    //fi=fopen(a[1],"r+");
+    fi=fopen("doi.pt","r+");
     fo=fopen("out.pt","w+");
     dr=fopen("drum.bin","wb+");
 
     printf("ILC\n");
-    printf("? "); c = getc(stdin);
+    printf("H%d ",HLTF); c = getc(stdin);
     while(c!='.') {
         if(c=='b') {
-            fflush(stdin); bPC=bs();
+            fflush(stdin); bs();
+            printf("H%d ",HLTF);
         }
-	else if(c=='m') {
-	    fclose(fi);
-	    printf("m> "); fgets(bf,10,stdin);
-	    for(;*bf!='\n';bf++) {}
-	    *bf=0;
-	    fi=fopen(bf,"r+");
-	}
-        while(HLTF == 0) {
-            if(HLTF)printf("H%d",HLTF);
-            exc(M[PC]);
+	    else if(c=='m') {
+	        fclose(fi);
+	        printf("m> "); fgets(bf,10,stdin);
+	        for(;*bf!='\n';bf++) {}
+	        *bf=0;
+	        fi=fopen(bf,"r+");
+            printf("H%d ",HLTF);
+	    }
+        else if(c=='x') {
+            for(int i=0;i<1024;i++) {
+                printf("@%04d: ",i);
+                for(int j=0;j<40;j++)
+                    printf("%d",M[i][j]);
+                printf("\n");
+            }
+            printf("H%d ",HLTF);
         }
-        printf("? "); c = getc(stdin);
-        HLTF=0;
+        else if(c=='s') {
+            HLTF=0;
+            while(HLTF == 0) {
+                exc(M[PC]);
+            }
+            printf("H%d ",HLTF);
+        }
+        c = getc(stdin);
     }
 
     fclose(fi); fclose(fo); fclose(dr);
