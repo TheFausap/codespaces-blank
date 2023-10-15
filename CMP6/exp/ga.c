@@ -19,8 +19,19 @@ sol solutions[SOLN];
 
 long double drand (double low, double high)
 {
-    
-    return ( (long double)rand() * ( high - low ) ) / (long double)RAND_MAX + low;
+    return ( (long double)rand() * ( high - low ) ) 
+	/ (long double)RAND_MAX + low;
+}
+
+long double mra(void)
+{
+    long double m=mrand48();
+    int m1;
+
+    m1 = (int)m/100;
+    m /= 100;
+
+    return (long double)m-m1;
 }
 
 void fits(sol *s)
@@ -40,9 +51,9 @@ int main(int n, char **a)
     
     for(int i=0;i<SOLN;i++) {
         solutions[i].rank = 0;
-        solutions[i].x=drand(-RNDMAX,RNDMAX);
-        solutions[i].y=drand(-RNDMAX,RNDMAX);
-        solutions[i].z=drand(-RNDMAX,RNDMAX);
+        solutions[i].x=mra();
+        solutions[i].y=mra();
+        solutions[i].z=mra();
         solutions[i].fitness=&fits;
     }
 
