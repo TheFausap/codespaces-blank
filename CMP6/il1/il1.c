@@ -469,8 +469,10 @@ void op2(char v, char *ad)
             lfto = 0;
             break;
         case '2':
-            PC = fer(ad);
-            lfto = 0;
+            if(lfto) {
+                PC = fer(ad);
+                lfto = 0;
+            }
             break;
         case '4':
             HLTF = 1;
@@ -491,8 +493,10 @@ void op2(char v, char *ad)
             break;
         case '3':
             for(int i=0;i<40;i++) A[i] = 0;
-            PC = fer(ad);
-            lfto = 0;
+            if(lfto) {
+                PC = fer(ad);
+                lfto = 0;
+            }
             break;
         case '5':
             for(int i=0;i<40;i++) A[i] = 0;
@@ -502,8 +506,10 @@ void op2(char v, char *ad)
             break;
         case '7':
             for(int i=0;i<40;i++) A[i] = 0;
-            PC = fer(ad);
-            lfto = 1;
+            if(lfto) {
+                PC = fer(ad);
+                lfto = 1;
+            }
             break;
         case '8':
         case 'K':
@@ -521,8 +527,10 @@ void op2(char v, char *ad)
         case 'S':
             for(int i=0;i<40;i++) A[i] = 0;
             A[1]=1;
-            PC = fer(ad);
-            lfto = 0;
+            if(lfto) {
+                PC = fer(ad);
+                lfto = 0;
+            }
             break;
         case 'J':
             for(int i=0;i<40;i++) A[i] = 0;
@@ -534,8 +542,10 @@ void op2(char v, char *ad)
         case 'L':
             for(int i=0;i<40;i++) A[i] = 0;
             A[1]=1;
-             PC = fer(ad);
-            lfto = 1;
+            if(lfto) {
+                PC = fer(ad);
+                lfto = 1;
+            }
             break;
         default:
             break;
