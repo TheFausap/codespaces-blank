@@ -143,19 +143,71 @@ void _add(word *r, word* s, word *c)
     FL[5]=cnt1(r);
 }
 
-void _add16(word *r, word* s, word *c)
+void _sub(word *r, word* ss, word *c)
 {
-    for(int i=2*WSIZE-1;i>=0;i--) {
+    word *s;
+    s=calloc(WSIZE,sizeof(char));
+    mv(s,ss);
+    cmp(s);
+    for(int i=WSIZE-1;i>=0;i--) {
         r[i]=ab(r[i],s[i],c);
         if(i==3) FL[3]=*c;
     }
-    FL[7]=*c;
+    FL[7]=(*c)^1;
     FL[0]=r[0];
     if(isz(r)) FL[1]=1; else FL[1]=0;
     FL[5]=cnt1(r);
 }
 
-void _dadd(void)
+void _add16(word *r, word *sh, word *sl, word *c)
+{
+    word s[2*WSIZE];
+    s[0]=sh[0];
+    s[1]=sh[1];
+    s[2]=sh[2];
+    s[3]=sh[3];
+    s[4]=sh[4];
+    s[5]=sh[5];
+    s[6]=sh[6];
+    s[7]=sh[7];
+    s[8]=sl[0];
+    s[9]=sl[1];
+    s[10]=sl[2];
+    s[11]=sl[3];
+    s[12]=sl[4];
+    s[13]=sl[5];
+    s[14]=sl[6];
+    s[15]=sl[7];
+
+    for(int i=2*WSIZE-1;i>=0;i--) {
+        s[i]=ab(r[i],s[i],c);
+        if(i==3) FL[3]=*c;
+    }
+
+    FL[7]=*c;
+    FL[0]=r[0];
+    if(isz(r)) FL[1]=1; else FL[1]=0;
+    FL[5]=cnt1(r);
+
+    sh[0]=s[0];
+    sh[1]=s[1];
+    sh[2]=s[2];
+    sh[3]=s[3];
+    sh[4]=s[4];
+    sh[5]=s[5];
+    sh[6]=s[6];
+    sh[7]=s[7];
+    sl[0]=s[8];
+    sl[1]=s[9];
+    sl[2]=s[10];
+    sl[3]=s[11];
+    sl[4]=s[12];
+    sl[5]=s[13];
+    sl[6]=s[14];
+    sl[7]=s[15];
+}
+
+void _daa(void)
 {
     word c=0;
     word sl[]={0,0,0,0,0,1,1,0};
@@ -186,41 +238,41 @@ void exc(word *a)
             break;
         case 1:
             // LXI
-            mv(B,M[++PC]);
             mv(C,M[++PC]);
-            PC++;
+            mv(B,M[++PC]);
+            PC+=3;
             break;
         case 0x11:
             // LXI
-            mv(D,M[++PC]);
             mv(E,M[++PC]);
+            mv(D,M[++PC]);
             PC++;
             break;
         case 0x21:
             // LXI
-            mv(H,M[++PC]);
             mv(L,M[++PC]);
+            mv(H,M[++PC]);
             PC++;
             break;
         case 0x31:
             // LXI
-            SP[0]=M[PC+1][0];
-            SP[1]=M[PC+1][1];
-            SP[2]=M[PC+1][2];
-            SP[3]=M[PC+1][3];
-            SP[4]=M[PC+1][4];
-            SP[5]=M[PC+1][5];
-            SP[6]=M[PC+1][6];
-            SP[7]=M[PC+1][7];
+            SP[0]=M[PC+2][0];
+            SP[1]=M[PC+2][1];
+            SP[2]=M[PC+2][2];
+            SP[3]=M[PC+2][3];
+            SP[4]=M[PC+2][4];
+            SP[5]=M[PC+2][5];
+            SP[6]=M[PC+2][6];
+            SP[7]=M[PC+2][7];
             
-            SP[8]=M[PC+2][0];
-            SP[9]=M[PC+2][1];
-            SP[10]=M[PC+2][2];
-            SP[11]=M[PC+2][3];
-            SP[12]=M[PC+2][4];
-            SP[13]=M[PC+2][5];
-            SP[14]=M[PC+2][6];
-            SP[15]=M[PC+2][7];
+            SP[8]=M[PC+1][0];
+            SP[9]=M[PC+1][1];
+            SP[10]=M[PC+1][2];
+            SP[11]=M[PC+1][3];
+            SP[12]=M[PC+1][4];
+            SP[13]=M[PC+1][5];
+            SP[14]=M[PC+1][6];
+            SP[15]=M[PC+1][7];
 
             PC+=3;
             break;
@@ -369,7 +421,7 @@ void exc(word *a)
             break;
         case 0x27:
             // DAA
-            _dadd();
+            _daa();
             PC++;
             break;
         case 0x37:
@@ -380,8 +432,8 @@ void exc(word *a)
         case 9:
             // DAD
             mv(oFL,FL);
-            _add(C,L,&c);
-            _add(B,H,&c);
+            _add(L,C,&c);
+            _add(H,B,&c);
             FL[0]=oFL[0];
             FL[1]=oFL[1];
             FL[3]=oFL[3];
@@ -391,8 +443,8 @@ void exc(word *a)
         case 0x19:
             // DAD
             mv(oFL,FL);
-            _add(E,L,&c);
-            _add(D,H,&c);
+            _add(L,E,&c);
+            _add(H,D,&c);
             FL[0]=oFL[0];
             FL[1]=oFL[1];
             FL[3]=oFL[3];
@@ -413,8 +465,7 @@ void exc(word *a)
         case 0x39:
             // DAD
             mv(oFL,FL);
-            _add(L,L,&c);
-            _add(H,H,&c);
+            _add16(SP,H,L,&c);
             FL[0]=oFL[0];
             FL[1]=oFL[1];
             FL[3]=oFL[3];
