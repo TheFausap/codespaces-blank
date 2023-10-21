@@ -25,7 +25,8 @@ word ONES[WSIZE];
 word ONES16[2 * WSIZE];
 
 uint16_t PC;
-char HLTF = 0;
+char HLTF;
+word dly;
 
 word* M[MSIZE];
 
@@ -138,6 +139,14 @@ void u16b(uint16_t v, word* h, word* l)
     }
 }
 
+void u8b(uint8_t v, word* l)
+{
+    for (int i = WSIZE - 1; i >= 0; i--) {
+        l[i] = (word)v % 2;
+        v /= 2;
+    }
+}
+
 void set(word* m, int v)
 {
     word s = 0;
@@ -192,17 +201,17 @@ void pop16(word* h, word* l)
 void i0(void)
 {
     for (int i = 0; i < WSIZE; i++) {
-        A[i] = 0;
-        B[i] = 0; C[i] = 0;
-        D[i] = 0; E[i] = 0;
-        H[i] = 0; L[i] = 0;
+        A[i] %= 2;
+        B[i] %= 2; C[i] %= 2;
+        D[i] %= 2; E[i] %= 2;
+        H[i] %= 2; L[i] %= 2;
         ONE[i] = 0;
-        FL[i] = 0;
+        FL[i] %= 2;
         ZERO[i] = 0;
         ONES[i] = 1;
     }
     for (int i = 0; i < 2 * WSIZE; i++) {
-        SP[i] = 0;
+        SP[i] %= 2;
         ONES16[i] = 0;
         ONES16[i] = 1;
     }
@@ -212,7 +221,8 @@ void i0(void)
     ONE[WSIZE - 1] = 1;
     ONES16[2 * WSIZE - 1] = 1;
     PC = 0;
-    FL[6] = 1;
+    FL[6] = 1; FL[2]=0; FL[4]=0;
+    HLTF = 0; dly = 1;
 }
 
 void _add(word* r, word* s, word* c)
@@ -305,6 +315,41 @@ void _daa(void)
     r = A[3] + A[2] * 2 + A[1] * 4 + A[0] * 8;
     if (r > 9) {
         _add(A, sh, &c);
+    }
+}
+
+void in(word t)
+{
+    switch(t) {
+        case 0:
+            if(dly) {
+                dly=0;
+                for(int i=0;i<1000000;i++) {}
+                if(arc4random()>0x3ef97) mv(A,(word*)"01100111");
+                else mv(A,(word*)"10011100");
+            }
+            break;
+        case 1:
+            u8b(getc(stdin),A);
+            dly=1;
+            break;
+        default:
+            break;     
+    }
+}
+
+void out(word t)
+{
+    switch(t) {
+        case 1:
+            if(dly==0) {
+                fprintf(stdout,"%c",b2u(A));
+                fflush(stdout);
+            }
+            dly=1;
+            break;
+        default:
+            break;     
     }
 }
 
@@ -659,11 +704,13 @@ void exc(word* a)
         PC++;
         break;
     case 0xC3:
+    case 0xCB:
         PC = b2u16(M[PC + 2], M[PC + 1]);
         break;
     case 0xD3:
         // OUT
         // TBD
+        out(b2u(M[++PC]));
         PC++;
         break;
     case 0xE3:
@@ -752,7 +799,7 @@ void exc(word* a)
         break;
     case 0xC4:
         if (FL[1] == 0) {
-            u16b(PC, th, tl);
+            u16b(PC+1, th, tl);
             push16(th, tl);
             PC = b2u16(M[PC + 2], M[PC + 1]);
         }
@@ -760,7 +807,7 @@ void exc(word* a)
         break;
     case 0xD4:
         if (FL[7] == 0) {
-            u16b(PC, th, tl);
+            u16b(PC+1, th, tl);
             push16(th, tl);
             PC = b2u16(M[PC + 2], M[PC + 1]);
         }
@@ -768,7 +815,7 @@ void exc(word* a)
         break;
     case 0xE4:
         if (FL[5] == 0) {
-            u16b(PC, th, tl);
+            u16b(PC+1, th, tl);
             push16(th, tl);
             PC = b2u16(M[PC + 2], M[PC + 1]);
         }
@@ -776,7 +823,7 @@ void exc(word* a)
         break;
     case 0xF4:
         if (FL[0] == 0) {
-            u16b(PC, th, tl);
+            u16b(PC+1, th, tl);
             push16(th, tl);
             PC = b2u16(M[PC + 2], M[PC + 1]);
         }
@@ -851,6 +898,22 @@ void exc(word* a)
         FL[5] = (cnt1(A) % 2) ^ 1;
         PC++;
         break;
+    case 0xC5:
+        push16(B,C);
+        PC++;
+        break;
+    case 0xD5:
+        push16(D,E);
+        PC++;
+        break;
+    case 0xE5:
+        push16(H,L);
+        PC++;
+        break;
+    case 0xF5:
+        push16(A,FL);
+        PC++;
+        break;
     case 6:
         // MVI
         mv(B, M[++PC]);
@@ -912,6 +975,32 @@ void exc(word* a)
     case 0xB6:
         ad = b2u16(H, L);
         for (int i = 0; i < WSIZE; i++) A[i] |= M[ad][i];
+        FL[7] = 0; FL[3] = 0;
+        FL[0] = A[0];
+        if (isz(A)) FL[1] = 1; else FL[1] = 0;
+        FL[5] = (cnt1(A) % 2) ^ 1;
+        PC++;
+        break;
+    case 0xC6:
+        _add(A,M[++PC],&c);
+        PC++;
+        break;
+    case 0xD6:
+        _sub(A,M[++PC],&c);
+        PC++;
+        break;
+    case 0xE6:
+        PC++;
+        for (int i = 0; i < WSIZE; i++) A[i] &= M[PC][i];
+        FL[7] = 0; FL[3] = 0;
+        FL[0] = A[0];
+        if (isz(A)) FL[1] = 1; else FL[1] = 0;
+        FL[5] = (cnt1(A) % 2) ^ 1;
+        PC++;
+        break;
+    case 0xF6:
+        PC++;
+        for (int i = 0; i < WSIZE; i++) A[i] |= M[PC][i];
         FL[7] = 0; FL[3] = 0;
         FL[0] = A[0];
         if (isz(A)) FL[1] = 1; else FL[1] = 0;
@@ -993,6 +1082,27 @@ void exc(word* a)
         FL[5] = (cnt1(A) % 2) ^ 1;
         PC++;
         break;
+    case 0xC7:
+        // RST
+        u16b(PC+1, th, tl);
+        push16(th, tl);
+        PC=0;
+        break;
+    case 0xD7:
+        u16b(PC+1, th, tl);
+        push16(th, tl);
+        PC=16;
+        break;
+    case 0xE7:
+        u16b(PC+1, th, tl);
+        push16(th, tl);
+        PC=32;
+        break;
+    case 0xF7:
+        u16b(PC+1, th, tl);
+        push16(th, tl);
+        PC=48;
+        break;
     case 0x48:
         mv(C, B);
         PC++;
@@ -1032,6 +1142,38 @@ void exc(word* a)
         _sub(A, B, &c);
         mv(A, t);
         PC++;
+        break;
+    case 0xC8:
+        // RZ
+        if (FL[1] == 1) {
+            pop16(th, tl);
+            PC = b2u16(th, tl);
+        }
+        else PC++;
+        break;
+    case 0xD8:
+        // RC
+        if (FL[7] == 1) {
+            pop16(th, tl);
+            PC = b2u16(th, tl);
+        }
+        else PC++;
+        break;
+    case 0xE8:
+        // RPE
+        if (FL[5] == 1) {
+            pop16(th, tl);
+            PC = b2u16(th, tl);
+        }
+        else PC++;
+        break;
+    case 0xF8:
+        // RM
+        if (FL[0] == 1) {
+            pop16(th, tl);
+            PC = b2u16(th, tl);
+        }
+        else PC++;
         break;
     case 9:
         // DAD
@@ -1112,6 +1254,27 @@ void exc(word* a)
         mv(A, t);
         PC++;
         break;
+    case 0xC9:
+    case 0xD9:
+        // RET
+        pop16(th, tl);
+        PC = b2u16(th, tl);
+        break;
+    case 0xE9:
+        // PCHL
+        PC=b2u16(H,L);
+        break;
+    case 0xF9:
+        // SPHL
+        SP[0]=H[0];SP[1]=H[1];
+        SP[2]=H[2];SP[3]=H[3];
+        SP[4]=H[4];SP[5]=H[5];
+        SP[6]=H[6];SP[7]=H[7];
+        SP[8]=L[0];SP[9]=L[1];
+        SP[10]=L[2];SP[11]=L[3];
+        SP[12]=L[4];SP[13]=L[5];
+        SP[14]=L[6];SP[15]=L[7];
+        break;
     case 0xA:
         // LDAX
         ad = b2u16(B, C);
@@ -1177,6 +1340,30 @@ void exc(word* a)
         mv(A, t);
         PC++;
         break;
+    case 0xCA:
+        if (FL[1] == 1) {
+            PC = b2u16(M[PC + 2], M[PC + 1]);
+        }
+        else PC += 3;
+        break;
+    case 0xDA:
+        if (FL[7] == 1) {
+            PC = b2u16(M[PC + 2], M[PC + 1]);
+        }
+        else PC += 3;
+        break;
+    case 0xEA:
+        if (FL[5] == 1) {
+            PC = b2u16(M[PC + 2], M[PC + 1]);
+        }
+        else PC += 3;
+        break;
+    case 0xFA:
+        if (FL[0] == 1) {
+            PC = b2u16(M[PC + 2], M[PC + 1]);
+        }
+        else PC += 3;
+        break;    
     case 0xB:
         // DCX
         mv(oFL, FL);
@@ -1242,6 +1429,27 @@ void exc(word* a)
         mv(t, A);
         _sub(A, E, &c);
         mv(A, t);
+        PC++;
+        break;
+    case 0xDB:
+        // IN
+        // TBD
+        in(b2u(M[++PC]));
+        PC++;
+        break;
+    case 0xEB:
+        // XCHG
+        mv(th,H);
+        mv(tl,L);
+        mv(H,D);
+        mv(L,E);
+        mv(D,th);
+        mv(E,tl);
+        PC++;
+        break;
+    case 0xFB:
+        // EI
+        // TBD
         PC++;
         break;
     case 0xC:
@@ -1312,6 +1520,38 @@ void exc(word* a)
         mv(A, t);
         PC++;
         break;
+    case 0xCC:
+        if (FL[1] == 1) {
+            u16b(PC+1, th, tl);
+            push16(th, tl);
+            PC = b2u16(M[PC + 2], M[PC + 1]);
+        }
+        else PC += 3;
+        break;
+    case 0xDC:
+        if (FL[7] == 1) {
+            u16b(PC+1, th, tl);
+            push16(th, tl);
+            PC = b2u16(M[PC + 2], M[PC + 1]);
+        }
+        else PC += 3;
+        break;
+    case 0xEC:
+        if (FL[5] == 1) {
+            u16b(PC+1, th, tl);
+            push16(th, tl);
+            PC = b2u16(M[PC + 2], M[PC + 1]);
+        }
+        else PC += 3;
+        break;
+    case 0xFC:
+        if (FL[0] == 1) {
+            u16b(PC+1, th, tl);
+            push16(th, tl);
+            PC = b2u16(M[PC + 2], M[PC + 1]);
+        }
+        else PC += 3;
+        break;
     case 0xD:
         // DCR
         mv(oFL, FL);
@@ -1375,6 +1615,14 @@ void exc(word* a)
         _sub(A, L, &c);
         mv(A, t);
         PC++;
+        break;
+    case 0xCD:
+    case 0xDD:
+    case 0xED:
+    case 0xFD:
+        u16b(PC+1, th, tl);
+        push16(th, tl);
+        PC = b2u16(M[PC + 2], M[PC + 1]);
         break;
     case 0xE:
         // MVI
@@ -1441,6 +1689,33 @@ void exc(word* a)
         ad = b2u16(H, L);
         mv(t, A);
         _sub(A, M[ad], &c);
+        mv(A, t);
+        PC++;
+        break;
+    case 0xCE:
+        // ACI
+        c=FL[7];
+        _add(A,M[++PC],&c);
+        PC++;
+        break;
+    case 0xDE:
+        // SBI
+        c=FL[7];
+        _sub(A,M[++PC],&c);
+        PC++;
+        break;
+    case 0xEE:
+        PC++;
+        for (int i = 0; i < WSIZE; i++) A[i] ^= M[PC][i];
+        FL[7] = 0; FL[3] = 0;
+        FL[0] = A[0];
+        if (isz(A)) FL[1] = 1; else FL[1] = 0;
+        FL[5] = (cnt1(A) % 2) ^ 1;
+        PC++;
+        break;
+    case 0xFE:
+        mv(t, A);
+        _sub(A, M[++PC], &c);
         mv(A, t);
         PC++;
         break;
@@ -1514,30 +1789,88 @@ void exc(word* a)
         mv(A, t);
         PC++;
         break;
-    default:
+    case 0xCF:
+        // RST 1
+        u16b(PC+1, th, tl);
+        push16(th, tl);
+        PC=8;
         break;
+    case 0xDF:
+        u16b(PC+1, th, tl);
+        push16(th, tl);
+        PC=24;
+        break;
+    case 0xEF:
+        u16b(PC+1, th, tl);
+        push16(th, tl);
+        PC=40;
+        break;
+    case 0xFF:
+        u16b(PC+1, th, tl);
+        push16(th, tl);
+        PC=56;
+        break;
+    default:
+        printf("???\n");
+        PC++;
+        break;
+    }
+}
+
+word *x2b(char *s)
+{
+    word *r;
+    r=calloc(8,sizeof(char));
+    r+=7;
+    int v=strtol(s,NULL,16);
+    for(int i=0;i<8;i++) {
+        *r=v%2;
+        v/=2;
+        r--;
+    }
+    return r+1;
+}
+
+void lhex(FILE *fi)
+{
+    char *bf, *p, *du, *da;
+    int bc, ad, rc, ck;
+
+    bf=calloc(80,sizeof(char));
+    du=calloc(256,sizeof(char));
+    da=calloc(512,sizeof(char));
+    while(fgets(bf,79,fi)) {
+        p=strchr(bf,'\n');
+        *p=0;
+        if(*bf!=':') continue;
+        if(strcmp(bf,":00000001FF")==0) break;
+        bf++;
+        bc=strtol(strncpy(du,bf,2),NULL,16);
+        bf+=2;
+        ad=strtol(strncpy(du,bf,4),NULL,16);
+        bf+=4;
+        rc=strtol(strncpy(du,bf,2),NULL,16);
+        bf+=2;
+        strncpy(da,bf,bc*2);
+        bf+=(bc*2);
+        ck=strtol(strncpy(du,bf,2),NULL,16);
+        for(int i=0;i<2*bc;i+=2) {
+            du[0]=da[0]; du[1]=da[1];
+            du[2]=0; da+=2;
+            mv(M[ad++],x2b(du));
+        } 
     }
 }
 
 int main(int n, char** a)
 {
+    FILE *f;
+
+    if(n>1) f=fopen(a[1],"r+");
+
     i0();
 
-    PC = 100;
-
-    set(M[100], 0x6);
-    set(M[101], 0x5);
-    set(M[102], 0x3e);
-    set(M[103], 0x2);
-    set(M[104], 0xb8);
-
-
-    set(M[110], 0x76);
-
-
-
-    set(M[0x32a], 0);
-    set(M[0x32b], 0x98);
+    lhex(f);
 
     while (HLTF == 0) {
         exc(M[PC]);
@@ -1545,7 +1878,13 @@ int main(int n, char** a)
 
     pw(A);
     pw(B);
+    pw(C);
+    pw(D);
+    pw(E);
+    pw(H);
+    pw(L);
     pwf();
 
+    if(f) fclose(f);
     return 0;
 }

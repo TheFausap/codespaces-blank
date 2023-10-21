@@ -1,0 +1,6 @@
+	IN 0
+	ANI 200Q
+	JNZ 0
+	MVI A,'A'
+	OUT 1
+	JMP 0
