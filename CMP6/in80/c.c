@@ -1925,5 +1925,6 @@ int main(int n, char** a)
     pw(L);
     pwf();
 
+    if(f) fclose(f);
     return 0;
 }
