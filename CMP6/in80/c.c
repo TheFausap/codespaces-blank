@@ -92,8 +92,8 @@ void cmp(word* a)
 {
     word c = 0;
     for (int i = 0; i < WSIZE; i++) a[i] = a[i] ^ 1;
-    for (int i = WSIZE - 1; i >= 0; i--)
-        a[i] = ab(a[i], ONE[i], &c);
+    //for (int i = WSIZE - 1; i >= 0; i--) 
+    //   a[i] = ab(a[i], ONE[i], &c);
 }
 
 word b2u(word* v)
@@ -244,27 +244,22 @@ void _sub(word* r, word* ss, word* c)
 {
     word* s, * oFL;
 
-    if (isz(ss)) {
-        FL[0] = r[0]; FL[3] = 0; FL[7] = 0;
-        if (isz(r)) FL[1] = 1; else FL[1] = 0;
-        FL[5] = (cnt1(r) % 2) ^ 1;
-        return;
-    }
     s = calloc(WSIZE, sizeof(char));
     oFL = calloc(WSIZE, sizeof(char));
     mv(s, ss);
-
-    if (*c) {
+    
+    /* if (*c) {
         mv(oFL, FL);
-        _add(s, ZERO, &c);
+        _add(s, ZERO, c);
         *c = 0;
         mv(FL, oFL);
-    }
+    }*/
     cmp(s);
     for (int i = WSIZE - 1; i >= 0; i--) {
         r[i] = ab(r[i], s[i], c);
         if (i == 3) FL[3] = *c;
     }
+    //FL[7] = (isz(s)==1) ? *c : (*c) ^ 1;
     FL[7] = (*c) ^ 1;
     FL[0] = r[0];
     if (isz(r)) FL[1] = 1; else FL[1] = 0;
@@ -379,6 +374,7 @@ void exc(word* a)
     word c = 0;
     word oFL[WSIZE];
     word t[WSIZE], th[WSIZE], tl[WSIZE];
+    //printf("%04XH\n", PC);
     switch (b2u(a))
     {
     case 0x00:
@@ -413,12 +409,13 @@ void exc(word* a)
         PC++;
         break;
     case 0x90:
+        c = 1;
         _sub(A, B, &c);
         PC++;
         break;
     case 0xA0:
         for (int i = 0; i < WSIZE; i++) A[i] &= B[i];
-        FL[7] = 0; FL[3] = 0;
+        FL[7] = 0;
         FL[0] = A[0];
         if (isz(A)) FL[1] = 1; else FL[1] = 0;
         FL[5] = (cnt1(A) % 2) ^ 1;
@@ -426,7 +423,7 @@ void exc(word* a)
         break;
     case 0xB0:
         for (int i = 0; i < WSIZE; i++) A[i] |= B[i];
-        FL[7] = 0; FL[3] = 0;
+        FL[7] = 0;
         FL[0] = A[0];
         if (isz(A)) FL[1] = 1; else FL[1] = 0;
         FL[5] = (cnt1(A) % 2) ^ 1;
@@ -468,7 +465,7 @@ void exc(word* a)
         // LXI
         mv(C, M[++PC]);
         mv(B, M[++PC]);
-        PC++;
+        PC ++;
         break;
     case 0x11:
         // LXI
@@ -526,12 +523,13 @@ void exc(word* a)
         PC++;
         break;
     case 0x91:
+        c = 1;
         _sub(A, C, &c);
         PC++;
         break;
     case 0xA1:
         for (int i = 0; i < WSIZE; i++) A[i] &= C[i];
-        FL[7] = 0; FL[3] = 0;
+        FL[7] = 0; 
         FL[0] = A[0];
         if (isz(A)) FL[1] = 1; else FL[1] = 0;
         FL[5] = (cnt1(A) % 2) ^ 1;
@@ -539,7 +537,7 @@ void exc(word* a)
         break;
     case 0xB1:
         for (int i = 0; i < WSIZE; i++) A[i] |= C[i];
-        FL[7] = 0; FL[3] = 0;
+        FL[7] = 0; 
         FL[0] = A[0];
         if (isz(A)) FL[1] = 1; else FL[1] = 0;
         FL[5] = (cnt1(A) % 2) ^ 1;
@@ -587,7 +585,7 @@ void exc(word* a)
     case 0x32:
         // STA
         ad = b2u16(M[PC + 2], M[PC + 1]);
-        mv(A, M[ad]);
+        mv(M[ad], A);
         PC += 3;
         break;
     case 0x42:
@@ -608,12 +606,13 @@ void exc(word* a)
         PC++;
         break;
     case 0x92:
+        c = 1;
         _sub(A, D, &c);
         PC++;
         break;
     case 0xA2:
         for (int i = 0; i < WSIZE; i++) A[i] &= D[i];
-        FL[7] = 0; FL[3] = 0;
+        FL[7] = 0; 
         FL[0] = A[0];
         if (isz(A)) FL[1] = 1; else FL[1] = 0;
         FL[5] = (cnt1(A) % 2) ^ 1;
@@ -621,7 +620,7 @@ void exc(word* a)
         break;
     case 0xB2:
         for (int i = 0; i < WSIZE; i++) A[i] |= D[i];
-        FL[7] = 0; FL[3] = 0;
+        FL[7] = 0; 
         FL[0] = A[0];
         if (isz(A)) FL[1] = 1; else FL[1] = 0;
         FL[5] = (cnt1(A) % 2) ^ 1;
@@ -704,12 +703,13 @@ void exc(word* a)
         PC++;
         break;
     case 0x93:
+        c = 1;
         _sub(A, E, &c);
         PC++;
         break;
     case 0xA3:
         for (int i = 0; i < WSIZE; i++) A[i] &= E[i];
-        FL[7] = 0; FL[3] = 0;
+        FL[7] = 0; 
         FL[0] = A[0];
         if (isz(A)) FL[1] = 1; else FL[1] = 0;
         FL[5] = (cnt1(A) % 2) ^ 1;
@@ -717,7 +717,7 @@ void exc(word* a)
         break;
     case 0xB3:
         for (int i = 0; i < WSIZE; i++) A[i] |= E[i];
-        FL[7] = 0; FL[3] = 0;
+        FL[7] = 0; 
         FL[0] = A[0];
         if (isz(A)) FL[1] = 1; else FL[1] = 0;
         FL[5] = (cnt1(A) % 2) ^ 1;
@@ -800,12 +800,13 @@ void exc(word* a)
         PC++;
         break;
     case 0x94:
+        c = 1;
         _sub(A, H, &c);
         PC++;
         break;
     case 0xA4:
         for (int i = 0; i < WSIZE; i++) A[i] &= H[i];
-        FL[7] = 0; FL[3] = 0;
+        FL[7] = 0; 
         FL[0] = A[0];
         if (isz(A)) FL[1] = 1; else FL[1] = 0;
         FL[5] = (cnt1(A) % 2) ^ 1;
@@ -813,7 +814,7 @@ void exc(word* a)
         break;
     case 0xB4:
         for (int i = 0; i < WSIZE; i++) A[i] |= H[i];
-        FL[7] = 0; FL[3] = 0;
+        FL[7] = 0; 
         FL[0] = A[0];
         if (isz(A)) FL[1] = 1; else FL[1] = 0;
         FL[5] = (cnt1(A) % 2) ^ 1;
@@ -901,12 +902,13 @@ void exc(word* a)
         PC++;
         break;
     case 0x95:
+        c = 1;
         _sub(A, L, &c);
         PC++;
         break;
     case 0xA5:
         for (int i = 0; i < WSIZE; i++) A[i] &= L[i];
-        FL[7] = 0; FL[3] = 0;
+        FL[7] = 0; 
         FL[0] = A[0];
         if (isz(A)) FL[1] = 1; else FL[1] = 0;
         FL[5] = (cnt1(A) % 2) ^ 1;
@@ -914,7 +916,7 @@ void exc(word* a)
         break;
     case 0xB5:
         for (int i = 0; i < WSIZE; i++) A[i] |= L[i];
-        FL[7] = 0; FL[3] = 0;
+        FL[7] = 0; 
         FL[0] = A[0];
         if (isz(A)) FL[1] = 1; else FL[1] = 0;
         FL[5] = (cnt1(A) % 2) ^ 1;
@@ -982,13 +984,14 @@ void exc(word* a)
         break;
     case 0x96:
         ad = b2u16(H, L);
+        c = 1;
         _sub(A, M[ad], &c);
         PC++;
         break;
     case 0xA6:
         ad = b2u16(H, L);
         for (int i = 0; i < WSIZE; i++) A[i] &= M[ad][i];
-        FL[7] = 0; FL[3] = 0;
+        FL[7] = 0; 
         FL[0] = A[0];
         if (isz(A)) FL[1] = 1; else FL[1] = 0;
         FL[5] = (cnt1(A) % 2) ^ 1;
@@ -997,7 +1000,7 @@ void exc(word* a)
     case 0xB6:
         ad = b2u16(H, L);
         for (int i = 0; i < WSIZE; i++) A[i] |= M[ad][i];
-        FL[7] = 0; FL[3] = 0;
+        FL[7] = 0; 
         FL[0] = A[0];
         if (isz(A)) FL[1] = 1; else FL[1] = 0;
         FL[5] = (cnt1(A) % 2) ^ 1;
@@ -1008,13 +1011,14 @@ void exc(word* a)
         PC++;
         break;
     case 0xD6:
+        c = 1;
         _sub(A, M[++PC], &c);
         PC++;
         break;
     case 0xE6:
         PC++;
         for (int i = 0; i < WSIZE; i++) A[i] &= M[PC][i];
-        FL[7] = 0; FL[3] = 0;
+        FL[7] = 0; 
         FL[0] = A[0];
         if (isz(A)) FL[1] = 1; else FL[1] = 0;
         FL[5] = (cnt1(A) % 2) ^ 1;
@@ -1023,7 +1027,7 @@ void exc(word* a)
     case 0xF6:
         PC++;
         for (int i = 0; i < WSIZE; i++) A[i] |= M[PC][i];
-        FL[7] = 0; FL[3] = 0;
+        FL[7] = 0; 
         FL[0] = A[0];
         if (isz(A)) FL[1] = 1; else FL[1] = 0;
         FL[5] = (cnt1(A) % 2) ^ 1;
@@ -1085,12 +1089,13 @@ void exc(word* a)
         PC++;
         break;
     case 0x97:
+        c = 1;
         _sub(A, A, &c);
         PC++;
         break;
     case 0xA7:
         for (int i = 0; i < WSIZE; i++) A[i] &= A[i];
-        FL[7] = 0; FL[3] = 0;
+        FL[7] = 0; 
         FL[0] = A[0];
         if (isz(A)) FL[1] = 1; else FL[1] = 0;
         FL[5] = (cnt1(A) % 2) ^ 1;
@@ -1098,7 +1103,7 @@ void exc(word* a)
         break;
     case 0xB7:
         for (int i = 0; i < WSIZE; i++) A[i] |= A[i];
-        FL[7] = 0; FL[3] = 0;
+        FL[7] = 0; 
         FL[0] = A[0];
         if (isz(A)) FL[1] = 1; else FL[1] = 0;
         FL[5] = (cnt1(A) % 2) ^ 1;
@@ -1147,13 +1152,13 @@ void exc(word* a)
         PC++;
         break;
     case 0x98:
-        c = FL[7];
+        c = FL[7] ^ 1;
         _sub(A, B, &c);
         PC++;
         break;
     case 0xA8:
         for (int i = 0; i < WSIZE; i++) A[i] ^= B[i];
-        FL[7] = 0; FL[3] = 0;
+        FL[7] = 0; 
         FL[0] = A[0];
         if (isz(A)) FL[1] = 1; else FL[1] = 0;
         FL[5] = (cnt1(A) % 2) ^ 1;
@@ -1161,6 +1166,7 @@ void exc(word* a)
         break;
     case 0xB8:
         mv(t, A);
+        c = 1;
         _sub(A, B, &c);
         mv(A, t);
         PC++;
@@ -1262,13 +1268,13 @@ void exc(word* a)
         PC++;
         break;
     case 0x99:
-        c = FL[7];
+        c = FL[7] ^ 1;
         _sub(A, C, &c);
         PC++;
         break;
     case 0xA9:
         for (int i = 0; i < WSIZE; i++) A[i] ^= C[i];
-        FL[7] = 0; FL[3] = 0;
+        FL[7] = 0; 
         FL[0] = A[0];
         if (isz(A)) FL[1] = 1; else FL[1] = 0;
         FL[5] = (cnt1(A) % 2) ^ 1;
@@ -1276,6 +1282,7 @@ void exc(word* a)
         break;
     case 0xB9:
         mv(t, A);
+        c = 1;
         _sub(A, C, &c);
         mv(A, t);
         PC++;
@@ -1348,13 +1355,13 @@ void exc(word* a)
         PC++;
         break;
     case 0x9A:
-        c = FL[7];
+        c = FL[7] ^ 1;
         _sub(A, D, &c);
         PC++;
         break;
     case 0xAA:
         for (int i = 0; i < WSIZE; i++) A[i] ^= D[i];
-        FL[7] = 0; FL[3] = 0;
+        FL[7] = 0; 
         FL[0] = A[0];
         if (isz(A)) FL[1] = 1; else FL[1] = 0;
         FL[5] = (cnt1(A) % 2) ^ 1;
@@ -1362,6 +1369,7 @@ void exc(word* a)
         break;
     case 0xBA:
         mv(t, A);
+        c = 1;
         _sub(A, D, &c);
         mv(A, t);
         PC++;
@@ -1439,13 +1447,13 @@ void exc(word* a)
         PC++;
         break;
     case 0x9B:
-        c = FL[7];
+        c = FL[7] ^ 1;
         _sub(A, E, &c);
         PC++;
         break;
     case 0xAB:
         for (int i = 0; i < WSIZE; i++) A[i] ^= E[i];
-        FL[7] = 0; FL[3] = 0;
+        FL[7] = 0; 
         FL[0] = A[0];
         if (isz(A)) FL[1] = 1; else FL[1] = 0;
         FL[5] = (cnt1(A) % 2) ^ 1;
@@ -1453,6 +1461,7 @@ void exc(word* a)
         break;
     case 0xBB:
         mv(t, A);
+        c = 1;
         _sub(A, E, &c);
         mv(A, t);
         PC++;
@@ -1528,13 +1537,13 @@ void exc(word* a)
         PC++;
         break;
     case 0x9C:
-        c = FL[7];
+        c = FL[7] ^ 1;
         _sub(A, H, &c);
         PC++;
         break;
     case 0xAC:
         for (int i = 0; i < WSIZE; i++) A[i] ^= H[i];
-        FL[7] = 0; FL[3] = 0;
+        FL[7] = 0; 
         FL[0] = A[0];
         if (isz(A)) FL[1] = 1; else FL[1] = 0;
         FL[5] = (cnt1(A) % 2) ^ 1;
@@ -1542,6 +1551,7 @@ void exc(word* a)
         break;
     case 0xBC:
         mv(t, A);
+        c = 1;
         _sub(A, H, &c);
         mv(A, t);
         PC++;
@@ -1624,7 +1634,7 @@ void exc(word* a)
         PC++;
         break;
     case 0x9D:
-        c = FL[7];
+        c = FL[7] ^ 1;
         _sub(A, L, &c);
         PC++;
         break;
@@ -1638,6 +1648,7 @@ void exc(word* a)
         break;
     case 0xBD:
         mv(t, A);
+        c = 1;
         _sub(A, L, &c);
         mv(A, t);
         PC++;
@@ -1698,7 +1709,7 @@ void exc(word* a)
         break;
     case 0x9E:
         ad = b2u16(H, L);
-        c = FL[7];
+        c = FL[7] ^ 1;
         _sub(A, M[ad], &c);
         PC++;
         break;
@@ -1714,6 +1725,7 @@ void exc(word* a)
     case 0xBE:
         ad = b2u16(H, L);
         mv(t, A);
+        c = 1;
         _sub(A, M[ad], &c);
         mv(A, t);
         PC++;
@@ -1726,7 +1738,7 @@ void exc(word* a)
         break;
     case 0xDE:
         // SBI
-        c = FL[7];
+        c = FL[7] ^ 1;
         _sub(A, M[++PC], &c);
         PC++;
         break;
@@ -1741,6 +1753,7 @@ void exc(word* a)
         break;
     case 0xFE:
         mv(t, A);
+        c = 1;
         _sub(A, M[++PC], &c);
         mv(A, t);
         PC++;
@@ -1797,7 +1810,7 @@ void exc(word* a)
         PC++;
         break;
     case 0x9F:
-        c = FL[7];
+        c = FL[7] ^ 1;
         _sub(A, A, &c);
         PC++;
         break;
@@ -1811,6 +1824,7 @@ void exc(word* a)
         break;
     case 0xBF:
         mv(t, A);
+        c = 1;
         _sub(A, A, &c);
         mv(A, t);
         PC++;
@@ -1857,13 +1871,13 @@ word* x2b(char* s)
     return r + 1;
 }
 
-void lhex(char* n)
+void lhex(char *n)
 {
     char* bf, * p, * du2, * du4, * da, * oda;
     int bc, ad, rc, ck;
 
     FILE* fi;
-
+        
     fi = fopen(n, "r+");
     if (!fi) { printf("HEX not found\n"); exit(2); }
     PC = 0;
@@ -1902,13 +1916,21 @@ void lhex(char* n)
     if (fi) fclose(fi);
 }
 
+void dump(uint16_t s, uint16_t e)
+{
+    for (uint16_t i = s; i <= e; i++) {
+        printf("%04XH: (%c)", i,(char)b2u(M[i])); pw(M[i]);
+    }
+    printf("\n");
+}
+
 int main(int n, char** a)
 {
     i0();
     lhex("3809.hex");
 
-    if (n > 1) lhex(a[1]);
-
+    if (n>1) lhex(a[1]);
+    printf("I8080B\n");
     printf("Starting at %04XH\n", PC);
 
     while (HLTF == 0) {
@@ -1925,6 +1947,9 @@ int main(int n, char** a)
     pw(L);
     pwf();
 
-    if(f) fclose(f);
+    dump(0xf0, 0xff);
+
+    printf("\n"); fflush(stdout);
+   
     return 0;
 }
