@@ -1563,8 +1563,7 @@ int main(int n, char **a)
 	    else if(c=='m') {
 	        fclose(fi);
 	        printf("m> "); fgets(bf,10,stdin);
-	        for(;*bf!='\n';bf++) {}
-	        *bf=0;
+	        *(strchr(bf,'\n'))=0;
 	        fi=fopen(bf,"r+");
             printf("H%d ",HLTF);
 	    }
