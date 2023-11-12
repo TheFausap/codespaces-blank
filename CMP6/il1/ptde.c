@@ -74,7 +74,7 @@ void punchp(char *v)
 int main(int n, char **a)
 {
     char c;
-    int ccnt=1,pos=0;
+    int ccnt=1,pos=0,sfl=0;
     fo=fopen("outde.pt","w+");
     tcgetattr( STDIN_FILENO, &oldt);
     newt=oldt;
@@ -93,7 +93,11 @@ int main(int n, char **a)
             if((ccnt==3)&&(isalpha(c))) punchp(cel['0']);
             punchp(cel[toupper(c)]);
         }
-        if((ccnt>2)&&(isalpha(c))) { printf("\n%s _ ",d2sex(++pos)); ccnt=0; }
+        if((ccnt>2)&&(isalpha(c))) { 
+            if((c!='S')&&(c!='s')) { printf("\n%s _ ",d2sex(++pos)); ccnt=0; }
+            else sfl=1;
+        }
+        else if(sfl==1) { printf("\n%s _ ",d2sex(++pos)); ccnt=0; sfl=0; }
         ccnt++;
     }
 
