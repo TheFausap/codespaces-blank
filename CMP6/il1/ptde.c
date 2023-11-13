@@ -88,7 +88,7 @@ int main(int n, char **a)
     if(n>0) {
         pos=sex2d(a[1]);
         printf("PTP/DE %s\n", a[1]);
-        printf("%s _ ",d2sex(pos));
+        printf("%03d _ ",pos);
     } else printf("PTP/DE 0\n");
     while((c=fgetc(stdin))) {
         if(ccnt==2) printf("  ");
@@ -98,10 +98,10 @@ int main(int n, char **a)
             punchp(cel[toupper(c)]);
         }
         if((ccnt>2)&&(isalpha(c))) { 
-            if((c!='S')&&(c!='s')) { printf("\n%s _ ",d2sex(++pos)); ccnt=0; }
+            if((c!='S')&&(c!='s')) { printf("\n%03d _ ",++pos); ccnt=0; }
             else sfl=1;
         }
-        else if(sfl==1) { printf("\n%s _ ",d2sex(++pos)); ccnt=0; sfl=0; }
+        else if(sfl==1) { printf("\n%03d _ ",++pos); ccnt=0; sfl=0; }
         ccnt++;
     }
 

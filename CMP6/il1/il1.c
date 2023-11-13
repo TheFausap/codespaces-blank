@@ -21,6 +21,8 @@ int PC = 0;
 char HLTF = 0;
 int bPC = -1;
 char lfto = 1;
+char olfto = 0;
+int ss=0;
 
 FILE *fi, *fo, *dr;
 
@@ -326,10 +328,12 @@ void set(char* m, long v)
 
 void setsex(char* m, char *sls, char *srs)
 {
-    char op[8], addr[12];
+    char *op, *addr;
     char *sl, *sr, *osl, *osr;
     osl=calloc(strlen(sls),sizeof(sls));
     osr=calloc(strlen(srs),sizeof(srs));
+    op=calloc(9,sizeof(char));
+    addr=calloc(13,sizeof(char));
     sl=osl;sr=osr;
 
     for(;*sls;sls++,osl++) { 
@@ -1445,10 +1449,9 @@ void exc(char *w)
     char *ad;
     op=calloc(8,sizeof(char));
     ad=calloc(10,sizeof(char));
-    if (lfto) { mvn(t,w,0,19); lfto=0; } else { mvn(t,w,20,39); lfto=1; }
+    if (lfto) { mvn(t,w,0,19); olfto=lfto; lfto=0; } else { PC++; mvn(t,w,20,39); olfto=lfto; lfto=1; }
     mvn(op,t,0,7);
     mvn(ad,t,10,19);
-    if (lfto) PC++;
     switch(luxT(op)) {
         case '0':
             op0(luxV(op),ad);
@@ -1498,14 +1501,14 @@ void exc(char *w)
         default:
             break;
     }
-    #if 0
+    if (ss) {
     if(lfto) {
         printf("PC %d: ",PC);
         for(int i=0;i<40;i++) printf("%d",M[PC][i]);
         printf("\nPress ENTER to continue\n");
         fgets(t,3,stdin);
     }
-    #endif
+    }
 }
 
 void bs(void)
@@ -1516,7 +1519,6 @@ void bs(void)
     bf=calloc(30,sizeof(char));
     obf=bf;
     for(int i=0;i<30;i++) { bf[i]=0; }
-    fgets(bf,29,stdin);
     printf("B/");fgets(bf,29,stdin);
     ol=strtol(bf,NULL,10); l=ol;
     printf("B/%04d ",l);
@@ -1532,10 +1534,11 @@ void bs(void)
             strcpy(rw,bf); 
             setsex(M[l++],lw,rw); 
             nw=1; 
-            pw(M[l-1]);
+            printf("%d: ",l-1);pw(M[l-1]);
         }
         printf("B/%04d ",l);
     }
+    /* RUN FIRST LOCATION */
     exc(M[ol]); //left side
     exc(M[ol]); //right side
     PC=ol;
@@ -1548,40 +1551,58 @@ int main(int n, char **a)
     i0();
 
     bf=calloc(11,sizeof(char));
-    //fi=fopen(a[1],"r+");
-    fi=fopen("doi.pt","r+");
+    fi=fopen(a[1],"r+");
+    //fi=fopen("doi.pt","r+");
     fo=fopen("out.pt","w+");
     dr=fopen("drum.bin","wb+");
 
     printf("ILC\n");
-    printf("H%d ",HLTF); c = getc(stdin);
+    printf("H%d (%04d)",HLTF,PC); c = getc(stdin);
     while(c!='.') {
         if(c=='b') {
+            /* BOOTSTRAP ROUTINE */
             fflush(stdin); bs();
-            printf("H%d ",HLTF);
+            printf("H%d (%04d)",HLTF,PC);
         }
-	    else if(c=='m') {
-	        fclose(fi);
-	        printf("m> "); fgets(bf,10,stdin);
-	        *(strchr(bf,'\n'))=0;
-	        fi=fopen(bf,"r+");
-            printf("H%d ",HLTF);
-	    }
+	else if(c=='@') {
+            /* set CONTROL REGISTER */
+            printf("@");fflush(stdin);
+            fgets(bf,10,stdin);
+            PC=strtol(bf,NULL,10);
+            printf("H%d (%04d)",HLTF,PC);
+        }     
+	else if(c=='!') {
+            /* TOGGLE SINGLE STEP */
+            ss = ~ss;
+            printf("H%d (%04d) %d",HLTF,PC,ss);
+        }
+	else if(c=='m') {
+            /* CHANGE PAPER TAPE */
+	    fclose(fi);
+	    printf("m> "); fgets(bf,10,stdin);
+	    *(strchr(bf,'\n'))=0;
+	    fi=fopen(bf,"r+");
+            printf("H%d (%04d)",HLTF,PC);
+	}
         else if(c=='x') {
+            /* SHOW MEMORY (0-1023) */
             for(int i=0;i<1024;i++) {
                 printf("@%04d: ",i);
                 for(int j=0;j<40;j++)
                     printf("%d",M[i][j]);
                 printf("\n");
             }
-            printf("H%d ",HLTF);
+            printf("H%d (%04d)",HLTF,PC);
         }
         else if(c=='s') {
+            /* START AFTER AN HALT */
             HLTF=0;
+	    printf("Starting at %04d\n",PC);
+            pw(M[PC]);printf("\n");
             while(HLTF == 0) {
                 exc(M[PC]);
             }
-            printf("H%d ",HLTF);
+            printf("H%d (%04d)",HLTF,PC);
         }
         c = getc(stdin);
     }

@@ -1,4 +1,14 @@
-TAPE BOOT STRAP ROUTINE
+ON CONSOLE
+
+80 028
+40 000
+
+TAPE BOOTSTRAP ROUTINE
+---- --------- -------
+
+must be placed at the beginning of the
+tape to be loaded
+
 80 028
 40 001
 80 028
