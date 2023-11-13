@@ -79,7 +79,11 @@ int main(int n, char **a)
     tcgetattr( STDIN_FILENO, &oldt);
     newt=oldt;
     newt.c_lflag &= ~(ICANON);
+#ifdef __APPLE__
+    newt.c_oflag |= (OPOST|ONLRET);
+#else
     newt.c_oflag |= (OPOST|OLCUC|ONLRET);
+#endif
     tcsetattr( STDIN_FILENO, TCSANOW, &newt);
 
    if(n>0) {
@@ -87,7 +91,7 @@ int main(int n, char **a)
         printf("PTP/SE %s\n", a[1]);
         printf("%s _ ",d2sex(pos));
     } else printf("PTP/SE 0\n");
-    while(c=fgetc(stdin)) {
+    while((c=fgetc(stdin))) {
         if(ccnt==2) printf("XX");
         if(ccnt==5) printf("__");
         if(ccnt==7) printf("XX");
