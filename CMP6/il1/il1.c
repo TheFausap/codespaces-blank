@@ -21,7 +21,6 @@ int PC = 0;
 char HLTF = 0;
 int bPC = -1;
 char lfto = 1;
-char olfto = 0;
 int ss=0;
 
 FILE *fi, *fo, *dr;
@@ -1449,9 +1448,10 @@ void exc(char *w)
     char *ad;
     op=calloc(8,sizeof(char));
     ad=calloc(10,sizeof(char));
-    if (lfto) { mvn(t,w,0,19); olfto=lfto; lfto=0; } else { PC++; mvn(t,w,20,39); olfto=lfto; lfto=1; }
+    if (lfto) { mvn(t,w,0,19); lfto=0; } else { mvn(t,w,20,39); lfto=1; }
     mvn(op,t,0,7);
     mvn(ad,t,10,19);
+    if (lfto) PC++;
     switch(luxT(op)) {
         case '0':
             op0(luxV(op),ad);
