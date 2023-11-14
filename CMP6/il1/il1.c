@@ -18,10 +18,11 @@ char ONE[40];
 char HALF[40];
 int PC = 0;
 
-char HLTF = 0;
+int HLTF = 0;
 int bPC = -1;
 char lfto = 1;
-char olfto = 0;
+char ipair = 1;
+char jump=0;
 int ss=0;
 
 FILE *fi, *fo, *dr;
@@ -46,10 +47,11 @@ char *cel[] = {  0, 0, 0, 0, 0, 0, 0, 0,  0, 0,
                  0, 0, 0, 0, 0, 0, 0, 0,  0, 0, 
                  0, 0, 0, 0, 0, 0, 0, 0,  0, 0, 
                  0, 0, 0, 0, 0, 0, 0, 0, "0000", "0001",
-                 "0010", "0011", "0100", "0101", "0110", "0111", "1000", "1001", 0, 0,
+                 "0010", "0011", "0100", "0101", "0110", 
+                 "0111", "1000", "1001", 0, 0,
                  0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
-                 "1110", 0, 0, 0, "1101", "1010", "1111", 0, "1100", 0, 
-                 0, 0, 0, "1011" };
+                 "1110", 0, 0, 0, "1101", "1010", "1111", 
+                 0, "1100", 0, 0, 0, 0, "1011" };
 
 char *restr[] = {  0, 0, 0, 0, 0, 0, 0, 0,  0, 0, 
                  0, 0, 0, 0, 0, 0, 0, 0,  0, 0,
@@ -386,7 +388,8 @@ int op0(char v, char* ad)
 {
     int n = fer(ad);
     n%=64;
-    if (n==0) {HLTF = 1; return HLTF; }
+    jump=0;
+    if (n==0) {HLTF = 90; lfto ^= 1; return HLTF; }
     switch(v) {
         case '1':
         case '3':
@@ -404,7 +407,7 @@ int op0(char v, char* ad)
         case '8':
         case 'K':
         case 'N':
-            HLTF = 1;
+            HLTF = 80;
             break;
         case '9':
         case 'S':
@@ -415,11 +418,12 @@ int op0(char v, char* ad)
             for(int i=0;i<n;i++) shl();
             break;
         case 'F':
-            HLTF = 1;
+            HLTF = 99;
             break;
         default:
             break;
     }
+    lfto ^= 1;
     return 0;
 }
 
@@ -427,7 +431,8 @@ int op1(char v, char* ad)
 {
     int n = fer(ad);
     n%=64;
-    if (n==0) {HLTF = 1; return HLTF; }
+    jump=0;
+    if (n==0) {HLTF = 1; lfto ^= 1; return HLTF; }
     switch(v) {
         case '1':
         case '3':
@@ -445,7 +450,7 @@ int op1(char v, char* ad)
         case '8':
         case 'K':
         case 'N':
-            HLTF = 16;
+            HLTF = 80;
             break;
         case '9':
         case 'S':
@@ -461,95 +466,85 @@ int op1(char v, char* ad)
         default:
             break;
     }
+    lfto ^= 1;
     return 0;
 }
 
 void op2(char v, char *ad)
 {
+    jump=1;
     switch(v) {
         case '0':
-            HLTF = 1;
+            HLTF = 2;
+            PC = fer(ad);
+            lfto = 0; /* right hand */
+            break;
+        case '2':
             PC = fer(ad);
             lfto = 0;
             break;
-        case '2':
-            if(lfto) {
-                PC = fer(ad);
-                lfto = 0;
-            }
-            break;
         case '4':
-            HLTF = 1;
+            HLTF = 2;
             PC = fer(ad);
             lfto = 1;
             break;
         case '6':
-            if(lfto) { 
-                PC = fer(ad);
-                lfto = 1;
-            }
+            PC = fer(ad);
+            lfto = 1;
             break;
         case '1':
             for(int i=0;i<40;i++) A[i] = 0;
-            HLTF = 1;
+            HLTF = 2;
             PC = fer(ad);
             lfto = 0;
             break;
         case '3':
             for(int i=0;i<40;i++) A[i] = 0;
-            if(lfto) {
-                PC = fer(ad);
-                lfto = 0;
-            }
+            PC = fer(ad);
+            lfto = 0;
             break;
         case '5':
             for(int i=0;i<40;i++) A[i] = 0;
-            HLTF = 1;
+            HLTF = 2;
             PC = fer(ad);
             lfto = 1;
             break;
         case '7':
             for(int i=0;i<40;i++) A[i] = 0;
-            if(lfto) {
-                PC = fer(ad);
-                lfto = 1;
-            }
+            PC = fer(ad);
+            lfto = 1;
             break;
         case '8':
         case 'K':
         case 'N':
         case 'F':
-            HLTF = 16;
+            HLTF = 80;
             break;
         case '9':
             for(int i=0;i<40;i++) A[i] = 0;
             A[1]=1;
-            HLTF = 1;
+            HLTF = 2;
             PC = fer(ad);
             lfto = 0;
             break;
         case 'S':
             for(int i=0;i<40;i++) A[i] = 0;
             A[1]=1;
-            if(lfto) {
-                PC = fer(ad);
-                lfto = 0;
-            }
+            PC = fer(ad);
+            lfto = 0;
             break;
         case 'J':
             for(int i=0;i<40;i++) A[i] = 0;
             A[1]=1;
-            HLTF = 1;
+            HLTF = 2;
             PC = fer(ad);
             lfto = 1;
             break;
         case 'L':
             for(int i=0;i<40;i++) A[i] = 0;
             A[1]=1;
-            if(lfto) {
-                PC = fer(ad);
-                lfto = 1;
-            }
+            PC = fer(ad);
+            lfto = 1;
             break;
         default:
             break;
@@ -574,6 +569,7 @@ void op3(char v, char *ad)
 void op4(char v, char *ad)
 {
     int addr = fer(ad);
+    jump=0;
     switch(v) {
         case '0':
         case '4':
@@ -601,7 +597,7 @@ void op4(char v, char *ad)
         case 'K':
         case 'N':
         case 'F':
-            HLTF = 16;
+            HLTF = 80;
             break;
         case 'S':
             for(int i=0;i<40;i++) A[i]=0;
@@ -616,11 +612,13 @@ void op4(char v, char *ad)
         default:
             break;
     }
+    lfto ^= 1;
 }
 
 void op5(char v, char *ad)
 {
     int addr = fer(ad);
+    jump=0;
     switch(v) {
         case '0':
         case '2':
@@ -639,7 +637,7 @@ void op5(char v, char *ad)
         case 'K':
         case 'N':
         case 'F':
-            HLTF = 16;
+            HLTF = 80;
             break;
         case '9':
         case 'S':
@@ -652,11 +650,13 @@ void op5(char v, char *ad)
         default:
             break;
     }
+    lfto ^= 1;
 }
 
 void op6(char v, char *ad)
 {
     int addr = fer(ad);
+    jump=0;
     switch(v) {
         case '6':
             if(gt(iabs(A),iabs(M[addr]))) { idiv(addr); HLTF=6; }
@@ -681,7 +681,7 @@ void op6(char v, char *ad)
         case 'K':
         case 'N':
         case 'F':
-            HLTF = 16;
+            HLTF = 80;
             break;
         case '0':
         case '1':
@@ -697,12 +697,13 @@ void op6(char v, char *ad)
         default:
             break;
     }
+    lfto ^= 1;
 }
 
 void op7(char v, char *ad)
 {
     int addr=fer(ad);
-
+    jump=0;
     switch(v) {
         case '0':
             cmp(M[addr]);
@@ -740,7 +741,7 @@ void op7(char v, char *ad)
         case 'K':
         case 'N':
         case 'F':
-            HLTF=16;
+            HLTF=80;
             break;
         case '9':
             for(int i=0;i<40;i++) A[i]=0;
@@ -765,6 +766,7 @@ void op7(char v, char *ad)
             mul(iabs(M[addr]));
             break;
     }
+    lfto ^= 1;
 }
 
 char *readp(char *p)
@@ -818,6 +820,7 @@ void op8(char v, char **ad)
     char adr[10];
     int nd = fer(*ad);
     int dad = 0;
+    jump=0;
     switch(v) {
         case '0':
             for(int i=0;i<nd/4;i++) {
@@ -827,6 +830,7 @@ void op8(char v, char **ad)
                 A[36]=l[1]; A[37]=l[2];
                 A[38]=l[3]; A[39]=l[4];
             }
+            lfto ^= 1;
             break;
         case '1':
         case '9':
@@ -838,12 +842,14 @@ void op8(char v, char **ad)
                 A[36]=l[1]; A[37]=l[2];
                 A[38]=l[3]; A[39]=l[4];
             }
+            lfto ^= 1;
             break;
         case '2':
             for(int i=0;i<nd/4;i++) {
                 punchp(A);
                 shl();shl();shl();shl();
             }
+            lfto ^= 1;
             break;
         case '3':
             for(int i=0;i<40;i++) A[i]=0;
@@ -851,6 +857,7 @@ void op8(char v, char **ad)
                 punchp(A);
                 shl();shl();shl();shl();
             }
+            lfto ^= 1;
             break;
         case '5':
             // DRUM SPECIAL VARIANT (40 bit)
@@ -871,6 +878,7 @@ void op8(char v, char **ad)
                     A[29]=DBF[0];A[30]=DBF[1];A[31]=DBF[2];A[32]=DBF[3];
                     A[33]=DBF[4];A[34]=DBF[5];A[35]=DBF[6];A[36]=DBF[7];
                     A[37]=DBF[8];A[38]=DBF[9];A[39]=DBF[10];
+                    lfto ^= 1;
                     break;
                 default:
                     shl();shl();shl();shl();
@@ -904,6 +912,7 @@ void op8(char v, char **ad)
                     shl();shl();shl();
                     fseek(dr,dad,SEEK_SET);
                     fwrite(DBF,sizeof(char),11,dr);
+                    lfto ^= 1;
                     break;
                 default:
                     DBF[0]=A[0];DBF[1]=A[1];DBF[2]=A[2];DBF[3]=A[3];
@@ -938,6 +947,7 @@ void op8(char v, char **ad)
                     shl();shl();shl();
                     fseek(dr,dad,SEEK_SET);
                     fwrite(DBF,sizeof(char),11,dr);
+                    lfto ^= 1;
                     break;
                 default:
                     DBF[0]=A[0];DBF[1]=A[1];DBF[2]=A[2];DBF[3]=A[3];
@@ -948,7 +958,7 @@ void op8(char v, char **ad)
                     shl();shl();shl();
                     fseek(dr,dad,SEEK_SET);
                     fwrite(DBF,sizeof(char),11,dr);
-                    lfto=0; exc(M[PC-1]);
+                    lfto ^= 1; exc(M[PC-1]);
                     break;
             }
             break;
@@ -959,6 +969,7 @@ void op8(char v, char **ad)
                 punchp(A);
                 shl();shl();shl();shl();
             }
+            lfto ^= 1;
             break;
         case 'L':
             for(int i=0;i<40;i++) A[i]=0; 
@@ -981,6 +992,7 @@ void op8(char v, char **ad)
                     shl();shl();shl();
                     fseek(dr,dad,SEEK_SET);
                     fwrite(DBF,sizeof(char),11,dr);
+                    lfto ^= 1;
                     break;
                 default:
                     DBF[0]=A[0];DBF[1]=A[1];DBF[2]=A[2];DBF[3]=A[3];
@@ -991,7 +1003,7 @@ void op8(char v, char **ad)
                     shl();shl();shl();
                     fseek(dr,dad,SEEK_SET);
                     fwrite(DBF,sizeof(char),11,dr);
-                    lfto=0; exc(M[PC-1]);
+                    lfto ^= 1; exc(M[PC-1]);
                     break;
             }
             break;
@@ -999,7 +1011,7 @@ void op8(char v, char **ad)
         case 'K':
         case 'N':
         case 'F':
-            HLTF = 16;
+            HLTF = 80;
             break;
         default:
             break;
@@ -1008,9 +1020,10 @@ void op8(char v, char **ad)
 
 void op9(char v, char *ad)
 {
-    int b = 0;
+    int b = 0, b4 = 0;
     char l[5];
     char d5[5], nc[6];
+    jump=0;
     switch(v) {
         case '1':
             for(int i=0;i<40;i++) A[i]=0;
@@ -1023,21 +1036,26 @@ void op9(char v, char *ad)
             break;
         case '2':
             d5[0]=ad[9];d5[1]=ad[0];d5[2]=ad[1];d5[3]=ad[2];d5[4]=ad[3];
-            nc[5]=ad[9];nc[4]=ad[8];nc[3]=ad[7];nc[2]=ad[6];nc[1]=ad[5];nc[0]=ad[4];
+            nc[5]=ad[9];nc[4]=ad[8];nc[3]=ad[7];nc[2]=ad[6];nc[1]=ad[5];
+            nc[0]=ad[4];
             b = (int)ceil(b2d(nc,6)/4.0);
-            for(int i=0;i<b;i++) {
+            b4 = b2d(nc,6);
+            for(int i=0,j=0;i<b;i++,j++) {
+                if(j<b4) shr();
                 punch5p(d5);
             }
             break;
         default:
             break;
     }
+    lfto ^= 1;
 }
 
 void opK(char v, char *ad)
 {
     int addr = fer(ad);
     char c=0;
+    jump=0;
     switch(v) {
         case '0':
             cmp1(Q);
@@ -1104,7 +1122,7 @@ void opK(char v, char *ad)
         case 'K':
         case 'N':
         case 'F':
-            HLTF = 16;
+            HLTF = 80;
             break;
         case '9':
             cmp1(Q);
@@ -1141,11 +1159,13 @@ void opK(char v, char *ad)
         default:
             break;
     }
+    lfto ^= 1;
 }
 
 void opS(char v, char *ad)
 {
     char c=0;
+    jump=0;
     switch(v) {
         case '0':
             mv(R3,Q);
@@ -1188,7 +1208,7 @@ void opS(char v, char *ad)
         case 'K':
         case 'N':
         case 'F':
-            HLTF = 16;
+            HLTF = 80;
             break;
         case '9':
             cmp(Q);
@@ -1211,11 +1231,13 @@ void opS(char v, char *ad)
         default:
             break;
     }
+    lfto ^= 1;
 }
 
 void opJ(char v, char *ad)
 {
     int addr = fer(ad);
+    jump=0;
     switch(v) {
         case '0':
         case '2':
@@ -1255,6 +1277,7 @@ void opJ(char v, char *ad)
         default:
             break;
     }
+    lfto ^= 1;
 }
 
 void opF(char v, char *ad)
@@ -1263,6 +1286,7 @@ void opF(char v, char *ad)
     char c=0;
     char t[40];
     mv(t,M[addr]);
+    jump=0;
     switch(v) {
         case '0':
             cmp1(t);
@@ -1328,7 +1352,7 @@ void opF(char v, char *ad)
         case '8':
         case 'K':
         case 'N':
-            HLTF = 16;
+            HLTF = 80;
             break;
         case '9':
             cmp1(t);
@@ -1363,10 +1387,11 @@ void opF(char v, char *ad)
             }
             break;
         case 'F':
-            HLTF = 1;
+            HLTF = 255;
         default:
             break;
     }
+    lfto ^= 1;
 }
 
 void opL(char v, char *ad)
@@ -1375,6 +1400,7 @@ void opL(char v, char *ad)
     char t[40];
     char c=0;
     mv(t,M[addr]);
+    jump=0;
     switch(v) {
         case '0':
             mv(R3,t);
@@ -1417,7 +1443,7 @@ void opL(char v, char *ad)
         case 'K':
         case 'N':
         case 'F':
-            HLTF = 16;
+            HLTF = 80;
             break;
         case '9':
             cmp(t);
@@ -1440,6 +1466,7 @@ void opL(char v, char *ad)
         default:
             break;
     }
+    lfto ^= 1;
 }
 
 void exc(char *w)
@@ -1449,9 +1476,12 @@ void exc(char *w)
     char *ad;
     op=calloc(8,sizeof(char));
     ad=calloc(10,sizeof(char));
-    if (lfto) { mvn(t,w,0,19); olfto=lfto; lfto=0; } else { PC++; mvn(t,w,20,39); olfto=lfto; lfto=1; }
+    if (lfto) { mvn(t,w,0,19); } else { mvn(t,w,20,39); }
     mvn(op,t,0,7);
     mvn(ad,t,10,19);
+    ipair^=1;
+    if((ipair) && !jump) PC++;
+    
     switch(luxT(op)) {
         case '0':
             op0(luxV(op),ad);
@@ -1502,12 +1532,12 @@ void exc(char *w)
             break;
     }
     if (ss) {
-    if(lfto) {
-        printf("PC %d: ",PC);
-        for(int i=0;i<40;i++) printf("%d",M[PC][i]);
-        printf("\nPress ENTER to continue\n");
-        fgets(t,3,stdin);
-    }
+        if(lfto) {
+            printf("PC %d: ",PC);
+            for(int i=0;i<40;i++) printf("%d",M[PC][i]);
+            printf("\nPress ENTER to continue\n");
+            fgets(t,3,stdin);
+        }
     }
 }
 
@@ -1538,7 +1568,7 @@ void bs(void)
         }
         printf("B/%04d ",l);
     }
-    /* RUN FIRST LOCATION */
+    /* RUN BOOTSTRAP */
     exc(M[ol]); //left side
     exc(M[ol]); //right side
     PC=ol;
@@ -1552,38 +1582,37 @@ int main(int n, char **a)
 
     bf=calloc(11,sizeof(char));
     fi=fopen(a[1],"r+");
-    //fi=fopen("doi.pt","r+");
     fo=fopen("out.pt","w+");
     dr=fopen("drum.bin","wb+");
 
     printf("ILC\n");
-    printf("H%d (%04d)",HLTF,PC); c = getc(stdin);
+    printf("H%d (%04d) ",HLTF,PC); c = getc(stdin);
     while(c!='.') {
         if(c=='b') {
             /* BOOTSTRAP ROUTINE */
             fflush(stdin); bs();
-            printf("H%d (%04d)",HLTF,PC);
+            printf("H%d (%04d) ",HLTF,PC);
         }
-	else if(c=='@') {
+	    else if(c=='@') {
             /* set CONTROL REGISTER */
             printf("@");fflush(stdin);
             fgets(bf,10,stdin);
             PC=strtol(bf,NULL,10);
-            printf("H%d (%04d)",HLTF,PC);
+            printf("H%d (%04d) ",HLTF,PC);
         }     
-	else if(c=='!') {
+	    else if(c=='!') {
             /* TOGGLE SINGLE STEP */
             ss = ~ss;
-            printf("H%d (%04d) %d",HLTF,PC,ss);
+            printf("H%d (%04d) %d ",HLTF,PC,ss);
         }
-	else if(c=='m') {
+	    else if(c=='m') {
             /* CHANGE PAPER TAPE */
-	    fclose(fi);
-	    printf("m> "); fgets(bf,10,stdin);
-	    *(strchr(bf,'\n'))=0;
-	    fi=fopen(bf,"r+");
-            printf("H%d (%04d)",HLTF,PC);
-	}
+	        fclose(fi);
+	        printf("M> "); fgets(bf,10,stdin);
+	        *(strchr(bf,'\n'))=0;
+	        fi=fopen(bf,"r+");
+            printf("H%d (%04d) ",HLTF,PC);
+	    }
         else if(c=='x') {
             /* SHOW MEMORY (0-1023) */
             for(int i=0;i<1024;i++) {
@@ -1592,17 +1621,17 @@ int main(int n, char **a)
                     printf("%d",M[i][j]);
                 printf("\n");
             }
-            printf("H%d (%04d)",HLTF,PC);
+            printf("H%d (%04d) ",HLTF,PC);
         }
         else if(c=='s') {
             /* START AFTER AN HALT */
             HLTF=0;
-	    printf("Starting at %04d\n",PC);
+	        printf("Starting at %04d\n",PC);
             pw(M[PC]);printf("\n");
             while(HLTF == 0) {
                 exc(M[PC]);
             }
-            printf("H%d (%04d)",HLTF,PC);
+            printf("H%d (%04d) ",HLTF,PC);
         }
         c = getc(stdin);
     }
