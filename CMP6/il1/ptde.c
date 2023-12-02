@@ -115,7 +115,7 @@ int main(int n, char **a)
     while((c=fgetc(stdin))) {
         if(ccnt==2) printf("  ");
         if(c=='.') break;
-        if(c=='r') { load(); printf("\nR0K\n%03d _ ",++pos); continue; }
+        if(c=='r') { load(); printf("R0K\n%03d _ ",++pos); continue; }
         else {
             if((ccnt==3)&&(isalpha(c))) punchp(cel['0']);
             punchp(cel[toupper(c)]);

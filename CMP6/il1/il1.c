@@ -143,10 +143,20 @@ long b2d(int *v, int l)
     return r;
 }
 
-char *i2s(int *v)
+char *i2sl(int *v)
 {
     char *s,*os;
     s=calloc(41,sizeof(s));
+    os=s;
+    for(;*v;v++,s++)
+        *s=(char)*v;
+    return os;
+}
+
+char *i2s(int *v)
+{
+    char *s,*os;
+    s=calloc(4,sizeof(s));
     os=s;
     for(;*v;v++,s++)
         *s=(char)*v;
@@ -1622,13 +1632,13 @@ int main(int n, char **a)
         else if(c=='x') {
             /* SHOW MEMORY (0-1023) */
             for(int i=0;i<1024;i++) {
-                printf("@%04d: ",i);
+                printf("@%04d (%s): ",i,i2s(d2sex(i)));
                 for (int j=0;j<40;j+=4)
                 {
                     printf("%d%d%d%d",M[i][j],M[i][j+1],M[i][j+2],M[i][j+3]);
                     printf(" ");
                 }
-                sexprint(i2s(d2sexl(b2d(M[i],40))));
+                sexprint(i2sl(d2sexl(b2d(M[i],40))));
                 printf("\n");
             }
             printf("H%d (%04d) (left: %d) ",HLTF,PC,lfto);
