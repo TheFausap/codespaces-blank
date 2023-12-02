@@ -71,6 +71,28 @@ void punchp(char *v)
     fputs("\n",fo);
 }
 
+void load()
+{
+    FILE *rt;
+    char c;
+    char *fn,*ofn,*ln;
+
+    fn=calloc(10,sizeof(fn));
+    ln=calloc(9,sizeof(ln));
+    ofn=fn;
+    printf(" _");
+    while((c=fgetc(stdin))!='\n') {
+        *fn=c;
+        fn++;
+    }
+    rt=fopen(ofn,"r+");
+    while(fgets(ln,8,rt))
+    {
+        fprintf(fo,"%s",ln);
+    }
+    fclose(rt);
+}
+
 int main(int n, char **a)
 {
     char c;
@@ -93,6 +115,7 @@ int main(int n, char **a)
     while((c=fgetc(stdin))) {
         if(ccnt==2) printf("  ");
         if(c=='.') break;
+        if(c=='r') { load(); printf("\nR0K\n%03d _ ",++pos); continue; }
         else {
             if((ccnt==3)&&(isalpha(c))) punchp(cel['0']);
             punchp(cel[toupper(c)]);
