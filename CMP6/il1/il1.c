@@ -836,6 +836,7 @@ void punchp(int *v)
     t[5]=(v[3]==0)? ' ' : 'O';
     t[6]=0;
     fputs(t,fo);
+    fputs("\n",fo);
 }
 
 void punch5p(int *v)
@@ -849,6 +850,7 @@ void punch5p(int *v)
     t[5]=(v[4]==0)? ' ' : 'O';
     t[6]=0;
     fputs(t,fo);
+    fputs("\n",fo);
 }
 
 void exc(int *);
