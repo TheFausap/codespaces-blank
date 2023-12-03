@@ -288,7 +288,7 @@ void mv(int *, int *);
 int *iabs(int *a)
 {
     int *t;
-    t=calloc(40,sizeof(char));
+    t=calloc(40,sizeof(t));
     mv(t,a);
     if(a[0]) { cmp(a); mv(t,CMPG); }
     return t;
